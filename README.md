@@ -1,423 +1,326 @@
-<p align='center'>
-  <img src="media/logo.jpg" alt="Stitches Native logo"/>
-<p/>
+# react-native-stylex-sheet
 
-<div align="center" >
-  <h1>
-    Stitches Native
-  </h1>
-  &middot;
-  <i>React Native implementation of the popular CSS-in-JS library Stitches</i>
-  &middot;
-  <br/>
-  <br/>
-</div>
+A StyleX-like CSS-in-JS library for React Native. Define styles at module level with `create()`, then apply them with `props()` and `variants()` — no component wrappers required.
 
 ## Installation
 
 ```sh
-npm install stitches-native
+npm install react-native-stylex-sheet
+# or
+yarn add react-native-stylex-sheet
 ```
 
-or if you use `yarn`:
+## Setup
 
-```sh
-yarn add stitches-native
-```
-
-## Documentation
-
-For the most part Stitches Native behaves exactly as Stitches so you should follow the [Stitches documentation](https://stitches.dev/) to learn the basic principles and how to setup everything.
-
-## Differences
-
-Due to the inherit differences between the Web and native platforms (iOS + Android) the implementation of Stitches Native differs slightly from the original Web version of Stitches.
-
-First of all, CSS in React Native doesn't have CSS Variables, cascade, inheritance, keyframes, pseudo elements/classes, or global styles which means that some features that are available in Stitches are not possible to implement in Stitches Native.
-
-Below you can see a list of all supported and unsupported features of Stitches Native.
-
-### Feature comparison
-
-| Feature               | Supported                                 |
-| --------------------- | ----------------------------------------- |
-| `styled`              | ✅                                        |
-| `createStitches`      | ✅                                        |
-| `defaultThemeMap`     | ✅                                        |
-| `css`                 | ✅ _(Simplified version)_                 |
-| `theme`               | ✅ _(Use `useTheme` in components/hooks)_ |
-| `createTheme`         | ✅ _(Only returned by `createStitches`)_  |
-| `useTheme`            | 🆕 (Stitches Native specific)             |
-| `ThemeProvider`       | 🆕 (Stitches Native specific)             |
-| `styled().attrs()`    | 🆕 (Stitches Native specific)             |
-| `globalCss`           | ❌ _(No global styles in RN)_             |
-| `keyframes`           | ❌ _(No CSS keyframes in RN)_             |
-| `getCssText`          | ❌ _(SSR not applicable to RN)_           |
-| Nesting               | ❌ _(No CSS cascade in RN)_               |
-| Selectors             | ❌ _(No CSS selectors in RN)_             |
-| Locally scoped tokens | ❌ _(No CSS variables in RN)_             |
-| Pseudo elements       | ❌ _(No pseudo elements/classes in RN)_   |
-
-### Using `createStitches` function
-
-The `createStitches` function doesn't need `prefix` or `insertionMethod` since they are not used in the native implementation.
-
-```js
-import { createStitches } from 'stitches-native';
-
-createStitches({
-  theme: object,
-  media: object,
-  utils: object,
-  themeMap: object,
-});
-```
-
-The return value of `createStitches` doesn't include `globalCss`, `keyframes`, or `getCssText` since they are not available in native platforms. React Native doesn't have any CSS keyframes based animations and all animations should be handled by the [Animated API](https://reactnative.dev/docs/animated) or with libraries such as [react-native-reanimated](https://github.com/software-mansion/react-native-reanimated).
-
-The return value of `createStitches` consist of the following:
-
-```js
-const { styled, css, theme, createTheme, useTheme, ThemeProvider, config } =
-  createStitches({
-    /*...*/
-  });
-```
-
-#### Supported token types
-
-The following token types are supported in React Native: `borderStyles`, `borderWidths`, `colors`, `fonts`, `fontSizes`, `fontWeights`, `letterSpacings`, `lineHeights`, `radii`, `sizes`, `space`, `zIndices`.
-
-The only unsupported token types are `shadows` and `transitions`. Shadows in React Native cannot be expressed with a single string token like on the Web where CSS `box-shadow` accepts a string that fully describes the shadow. In React Native shadows are defined differently on iOS and Android. On [iOS](https://reactnative.dev/docs/shadow-props) you need to set the various shadow properties separately:
+Call `createStylex()` once with your design tokens and export the returned API:
 
 ```ts
-shadowOffset: {
-  width: number,
-  height: number
-},
-shadowOpacity: number,
-shadowRadius: number
-```
+// stylex.ts
+import { createStylex } from 'react-native-stylex-sheet';
 
-On [Android](https://developer.android.com/training/material/shadows-clipping#Elevation) there is a completely different elevation system that doesn't let you alter individual shadow properties but instead you have to set a single number as the elevation level:
-
-```ts
-elevation: number;
-```
-
-So, instead of having shadows as part of the design tokens in the `theme` we can quite easily define shadow utilities inside `utils`:
-
-```js
-createStitches({
-  utils: {
-    shadow: (level: 'small' | 'medium' | 'large') => {
-      return {
-        small: {
-          elevation: 2,
-          shadowOffset: { width: 0, height: 1 },
-          shadowRadius: 3,
-          shadowOpacity: 0.1,
-          shadowColor: '#000',
-        },
-        medium: {
-          elevation: 5,
-          shadowOffset: { width: 0, height: 3 },
-          shadowRadius: 6,
-          shadowOpacity: 0.2,
-          shadowColor: '#000',
-        },
-        large: {
-          elevation: 10,
-          shadowOffset: { width: 0, height: 6 },
-          shadowRadius: 12,
-          shadowOpacity: 0.4,
-          shadowColor: '#000',
-        },
-      }[level];
+export const stylex = createStylex({
+  theme: {
+    colors: {
+      background: '#fff',
+      text: '#000',
+      primary: '#6200ee',
+    },
+    space: {
+      1: 4,
+      2: 8,
+      3: 16,
+      4: 32,
+    },
+    radii: {
+      sm: 4,
+      md: 8,
+      lg: 16,
     },
   },
-});
-```
-
-You can then use the shadow util like this:
-
-```js
-const Comp = styled('View', {
-  shadow: 'medium',
-});
-```
-
-The other unsupported token type is `transitions` which conflicts with how animations are handled in React Native. Read more about animations in the [Animations docs](https://reactnative.dev/docs/animations).
-
-### Using `css` helper
-
-Unlike on the Web there is no concept of `className` in React Native so the `css` function is basically an identity function providing only TS types for the style object and returning exactly the same object back (or if given multiple objects merges them together). The returned object can be appended after the first argument of a styled component.
-
-```jsx
-const styles = css({
-  backgroundColor: '$background', // <- get autocomplete for theme values
-});
-
-const SomeComp = styled(
-  'View',
-  {
-    /* ...other styles... */
+  media: {
+    md: '(width >= 750px)',
+    lg: '(width >= 1080px)',
   },
-  styles // <- you can add as many shared styles as you want
-);
+});
 
-<AnotherComp css={styles} />;
+export const { create, props, variants, useStylex, theme, createTheme, ThemeProvider, useTheme } = stylex;
 ```
 
-### Theming with `createTheme`
+### `createStylex` config
 
-Stitches Native handles theming differently than Stitches. Since there are no CSS Variables in React Native theming is handled via React Context in a similar way as other CSS-in-JS libraries such as [styled-components](https://styled-components.com/docs/advanced#theming) handle theming.
+| Option | Description |
+|---|---|
+| `theme` | Design token scales: `colors`, `space`, `sizes`, `radii`, `fonts`, `fontSizes`, `fontWeights`, `lineHeights`, `letterSpacings`, `borderWidths`, `borderStyles`, `zIndices` |
+| `media` | Breakpoints as CSS range queries or boolean device-type flags |
+| `utils` | Shorthand functions that expand to style objects |
+| `themeMap` | Override which CSS properties map to which token scale |
+
+---
+
+## Core API
+
+### `create(styleDefs)`
+
+Define styles at module level (outside components). Each key becomes a `StyleEntry`.
+
+```ts
+// button.tsx — module level
+import { create } from './stylex';
+
+const styles = create({
+  root: {
+    paddingHorizontal: '$3',
+    paddingVertical: '$2',
+    borderRadius: '$md',
+    backgroundColor: '$primary',
+
+    variants: {
+      size: {
+        sm: { paddingHorizontal: '$2', paddingVertical: '$1' },
+        lg: { paddingHorizontal: '$4', paddingVertical: '$3' },
+      },
+      outline: {
+        true: { backgroundColor: 'transparent', borderWidth: 1, borderColor: '$primary' },
+      },
+    },
+
+    compoundVariants: [
+      { size: 'lg', outline: 'true', css: { borderWidth: 2 } },
+    ],
+
+    defaultVariants: { size: 'sm' },
+  },
+
+  label: {
+    color: '#fff',
+    fontSize: 14,
+  },
+});
+```
+
+Tokens referenced with `$token` are resolved from the active theme. Use `$scale$token` to reference a specific scale explicitly (e.g. `$colors$primary`). Negative values use `$-space$2`.
+
+### `props(styleEntry | variantSpec)`
+
+Resolves a `StyleEntry` (or `VariantSpec`) into `{ style: StyleObject[] }` to spread on any React Native component.
 
 ```tsx
-const { theme, createTheme, ThemeProvider } = createStitches({
-  colors: {
-    background: '#fff',
-    text: '#000',
-  },
-});
+import { props } from './stylex';
+
+<View {...props(styles.root)} />
+```
+
+`props()` uses the **default theme** and reads device dimensions synchronously (non-reactive). For theme-switching and reactive media queries, use `useStylex().props()` instead.
+
+### `variants(entry, variantProps)`
+
+Wraps a `StyleEntry` with variant prop values. Pass the result to `props()`.
+
+```tsx
+import { props, variants } from './stylex';
+
+// Static variant value
+<View {...props(variants(styles.root, { size: 'lg' }))} />
+
+// Responsive variant value
+<View {...props(variants(styles.root, {
+  size: { '@initial': 'sm', '@md': 'lg' },
+}))} />
+```
+
+### `useStylex()`
+
+A React hook that returns `{ props, variants }` reactive to the current `ThemeProvider` theme and device dimensions (`useWindowDimensions`). Use this inside components whenever you need theme-switching or media-reactive styles.
+
+```tsx
+import { useStylex } from './stylex';
+
+function Button({ size, outline }) {
+  const sx = useStylex();
+
+  return (
+    <Pressable {...sx.props(sx.variants(styles.root, { size, outline }))}>
+      <Text {...sx.props(styles.label)}>Press me</Text>
+    </Pressable>
+  );
+}
+```
+
+---
+
+## Theming
+
+Themes are managed via React Context. The `ThemeProvider` sets the active theme for all descendant components.
+
+### `createTheme(overrides)`
+
+Creates an alternate theme by overriding token values from the base theme.
+
+```ts
+import { createTheme } from './stylex';
 
 const darkTheme = createTheme({
   colors: {
     background: '#000',
     text: '#fff',
+    primary: '#bb86fc',
   },
 });
+```
+
+### `ThemeProvider`
+
+```tsx
+import { ThemeProvider } from './stylex';
 
 function App() {
-  // In a real world scenario this value should probably live in React Context
-  const [darkMode, setDarkMode] = useState(false);
+  const [dark, setDark] = useState(false);
 
   return (
-    <ThemeProvider theme={darkMode ? darkTheme : theme}>
-      {/*...*/}
+    <ThemeProvider theme={dark ? darkTheme : theme}>
+      {/* ... */}
     </ThemeProvider>
   );
 }
 ```
 
-### Accessing the theme
+### `useTheme()`
 
-You can get the current theme via the `useTheme` hook:
+Returns the resolved token values of the active theme. Useful when passing theme values to props that don't accept style objects (e.g. `contentContainerStyle`).
 
 ```tsx
-import { useTheme } from '../your-stitches-config';
+import { useTheme } from './stylex';
 
 function Example() {
-  const theme = useTheme();
-
-  // Access theme tokens
-  // theme.colors|space|radii|etc.x
+  const t = useTheme();
 
   return (
-    <View style={{ backgroundColor: theme.colors.background }}>{/*...*/}</View>
-  );
-}
-```
-
-### Typing token aliases
-
-Stitches Native supports theme token aliases the same way as Stitches with a minor difference related to TypeScript support:
-
-```ts
-createStitches({
-  colors: {
-    black: '#000',
-    primary: '$black' as const,
-  },
-  space: {
-    1: 8,
-    2: 16,
-    3: 32,
-    max: '$3' as const,
-  },
-});
-```
-
-Note the usage of `as const` for token alias values. It is required if you want to have the correct type for the theme token value when accessing it via `useTheme` hook:
-
-```tsx
-import { useTheme } from '../your-stitches-config';
-
-function Example() {
-  const theme = useTheme();
-
-  const x = theme.colors.primary; // <-- type of `x` is `string`
-  const y = theme.space.max; // <--- type of `y` is `number` even though the value in the theme is `'$3'`, yey 😎
-
-  return <View style={{ backgroundColor: x, padding: y }}>{/*...*/}</View>;
-}
-```
-
-> ⚠️ NOTE: without `as const` the type of the token will always be `string`!
-
-For `string` type tokens, you don't necessarily need to use `as const` since the types align correctly without it, but you might want to do so anyway to be consistent.
-
-### Responsive styles with `media`
-
-Responsive styles are not very common in React Native applications since you usually have a clearly constrained device environment where the app is used. However, some times you might need to tweak a style for very small or large phones or build an app that needs to adapt to tablet devices. For these use cases Stitches Native has support for two kinds of responsive styles:
-
-1. Device types based media flags
-2. Device dimensions based media queries
-
-#### Device types based media flags
-
-Simple boolean flags in the `media` config can be used to distinguish between device types, eg. phone vs. tablet. You can utilize [`getDeviceType()`](https://github.com/react-native-device-info/react-native-device-info#getDeviceType) or [`isTablet()`](https://github.com/react-native-device-info/react-native-device-info#istablet) from [react-native-device-info](https://github.com/react-native-device-info/react-native-device-info) to get the device type.
-
-```js
-const isTablet = DeviceInfo.isTablet();
-
-const { ... } = createStitches({
-  media: {
-    phone: !isTablet,
-    tablet: isTablet,
-  },
-});
-```
-
-Then you can apply different prop values for variants of a styled components based on the device type:
-
-```tsx
-const ButtonText = styled('Text', {
-  // base styles
-
-  variants: {
-    color: {
-      primary: {
-        color: '$primary',
-      },
-      secondary: {
-        color: '$secondary',
-      },
-    },
-  },
-});
-
-<ButtonText color={{ '@phone': 'primary', '@tablet': 'secondary' }}>
-  Hello
-</ButtonText>;
-```
-
-#### Device dimensions based media queries
-
-It's also possible to have a more Web-like breakpoint system based on the dimensions of the device. The syntax for the queries follows the CSS [range queries](https://developer.mozilla.org/en-US/docs/Web/CSS/Media_Queries/Using_media_queries#syntax_improvements_in_level_4) syntax which means that there is no need to use `min-width` or `max-width`.
-
-Examples of supported range queries:
-
-- `(width > 750px)`
-- `(width >= 750px)`
-- `(width < 1080px)`
-- `(width <= 1080px)`
-- `(750px > width >= 1080px)`
-
-> ⚠️ NOTE: Only width based media queries are currently supported.
-
-```js
-const { ... } = createStitches({
-  media: {
-    md: '(width >= 750px)',
-    lg: '(width >= 1080px)',
-    xl: '(width >= 1284px)',
-    xxl: '(width >= 1536px)',
-  },
-});
-```
-
-> ⚠️ NOTE: The order of the media query keys matters and the responsive styles are applied in the order determined by `Object.entries` method.
-
-Using media queries works the same way as device type flags:
-
-```tsx
-const ButtonText = styled('Text', {
-  // base styles
-
-  variants: {
-    color: {
-      primary: {
-        color: '$primary',
-      },
-      secondary: {
-        color: '$secondary',
-      },
-    },
-  },
-});
-
-<ButtonText
-  color={{
-    '@initial': 'primary',
-    '@md': 'secondary',
-    '@lg': 'tertiary',
-  }}
->
-  Hello
-</ButtonText>;
-```
-
-### Additional props with `.attrs`
-
-In React Native it is quite common that a component exposes props (other than `style`) that accept a style object - a good example of this is the `ScrollView` component that has `contentContainerStyle` prop. Using theme tokens with these kind of props can be accomplished with the `useTheme` hook:
-
-```tsx
-function Comp() {
-  const theme = useTheme();
-
-  return (
-    <ScrollView contentContainerStyle={{ padding: theme.space[2] }}>
+    <ScrollView contentContainerStyle={{ padding: t.space[3] }}>
       {/* ... */}
     </ScrollView>
   );
 }
+```
 
-const ScrollView = styled('ScrollView', {
-  flex: 1,
+### Token aliases
+
+Token values can reference other tokens in the same scale using `$token` syntax:
+
+```ts
+createStylex({
+  theme: {
+    colors: {
+      black: '#000',
+      primary: '$black' as const,  // alias
+    },
+  },
 });
 ```
 
-This approach is fine but a bit convoluted since you have to import a hook just to access the theme tokens. There is a better way with the chainable `.attrs` method which can be used to attach additional props to a Stitches styled component (this method was popularized by [styled-components](https://styled-components.com/docs/api#attrs)).
+> **Note:** Token alias values require `as const` to get the correct resolved type when accessed via `useTheme()`. Without it TypeScript infers `string`.
 
-> ⚠️ NOTE: this method does not exist in the original Web version of Stitches.
+---
 
-```tsx
-function Example() {
-  return <ScrollView>{/*...*/}</ScrollView>;
-}
+## Responsive styles
 
-const ScrollView = styled('ScrollView', {
-  flex: 1,
-}).attrs((props) => ({
-  contentContainerStyle: {
-    padding: props.theme.space[2],
+### Dimension-based breakpoints
+
+Media queries follow CSS Level 4 range syntax. Only `width`-based queries are supported.
+
+```ts
+createStylex({
+  media: {
+    md: '(width >= 750px)',
+    lg: '(width >= 1080px)',
+    xl: '(width >= 1284px)',
   },
-}));
+});
 ```
 
-It is also possible to access the variants of the component within `.attrs`:
+> **Note:** The order of keys in `media` determines priority — later active queries overwrite earlier ones.
+
+Supported range formats:
+
+- `(width > 750px)` / `(width >= 750px)`
+- `(width < 1080px)` / `(width <= 1080px)`
+- `(750px <= width < 1080px)`
+
+### Device-type flags
+
+Boolean flags let you distinguish device types without dimension checks:
+
+```ts
+import DeviceInfo from 'react-native-device-info';
+
+createStylex({
+  media: {
+    phone: !DeviceInfo.isTablet(),
+    tablet: DeviceInfo.isTablet(),
+  },
+});
+```
+
+### Applying responsive variants
 
 ```tsx
-function Example() {
-  return <ScrollView spacious>{/*...*/}</ScrollView>;
-}
-
-const ScrollView = styled('ScrollView', {
-  flex: 1,
-  variants: {
-    spacious: {
-      true: {
-        // some styles...
-      },
-      false: {
-        // some styles...
-      },
-    },
-  },
-}).attrs((props) => ({
-  contentContainerStyle: {
-    padding: props.theme.space[props.spacious ? 4 : 2],
-  },
-}));
+<View
+  {...sx.props(
+    sx.variants(styles.root, {
+      size: { '@initial': 'sm', '@md': 'md', '@lg': 'lg' },
+    })
+  )}
+/>
 ```
+
+`@initial` sets the default value when no breakpoint is active.
+
+---
+
+## Utils
+
+Utils are functions that expand to style objects. They can reference other utils and support media keys.
+
+```ts
+createStylex({
+  utils: {
+    shadow: (level: 'sm' | 'md' | 'lg') =>
+      ({
+        sm: { elevation: 2, shadowOffset: { width: 0, height: 1 }, shadowRadius: 3, shadowOpacity: 0.1, shadowColor: '#000' },
+        md: { elevation: 5, shadowOffset: { width: 0, height: 3 }, shadowRadius: 6, shadowOpacity: 0.2, shadowColor: '#000' },
+        lg: { elevation: 10, shadowOffset: { width: 0, height: 6 }, shadowRadius: 12, shadowOpacity: 0.4, shadowColor: '#000' },
+      }[level]),
+  },
+});
+```
+
+```ts
+const styles = create({
+  card: {
+    shadow: 'md',
+    borderRadius: '$md',
+  },
+});
+```
+
+---
+
+## Supported token scales
+
+| Scale | Properties |
+|---|---|
+| `colors` | `backgroundColor`, `color`, `borderColor`, `shadowColor`, … |
+| `space` | `padding*`, `margin*`, `top`, `right`, `bottom`, `left` |
+| `sizes` | `width`, `height`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `flexBasis` |
+| `radii` | `borderRadius*` |
+| `fonts` | `fontFamily` |
+| `fontSizes` | `fontSize` |
+| `fontWeights` | `fontWeight` |
+| `lineHeights` | `lineHeight` |
+| `letterSpacings` | `letterSpacing` |
+| `borderWidths` | `borderWidth*` |
+| `borderStyles` | `borderStyle` |
+| `zIndices` | `zIndex` |
+
+**Not supported:** `shadows` (iOS/Android use different shadow APIs — use a `utils` helper instead) and `transitions` (use the [Animated API](https://reactnative.dev/docs/animated) or [react-native-reanimated](https://github.com/software-mansion/react-native-reanimated)).
+
+**Not applicable to React Native:** global styles, CSS cascade, inheritance, keyframes, pseudo-elements/classes, CSS variables, selectors.
