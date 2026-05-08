@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { THEME_VALUES } from './constants';
 
 export function processThemeMap(themeMap) {

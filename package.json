@@ -1,10 +1,10 @@
 {
-  "name": "stitches-native",
+  "name": "@mochi-inc-japan/react-native-stylex-sheet",
   "description": "The modern CSS-in-JS library for React Native",
   "version": "0.4.0",
   "license": "MIT",
-  "author": "Teemu Taskula",
-  "repository": "https://github.com/Temzasse/stitches-native",
+  "author": "Tkow",
+  "repository": "https://github.com/MOCHI-inc-JAPAN/react-native-stylex-sheet",
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",
   "types": "src/types/index.d.ts",
