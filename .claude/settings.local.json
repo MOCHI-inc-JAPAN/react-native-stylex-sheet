@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git *)"
+      "Bash(git *)",
+      "Bash(npm test *)",
+      "Bash(npx jest *)",
+      "Bash(pnpm test *)",
+      "Bash(pnpm install *)"
     ]
   }
 }

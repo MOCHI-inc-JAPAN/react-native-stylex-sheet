@@ -22,20 +22,54 @@ npm run format:write   # Prettier auto-format
 
 Build outputs go to `lib/commonjs/` and `lib/module/`. The source for the build is `src/internals/` (not the entire `src/`), as configured in `package.json`'s `react-native-builder-bob` field.
 
+## API
+
+The library uses a StyleX-like API. Call `createStylex(config)` to get a configured instance:
+
+```ts
+const { create, props, variants, useStylex, theme, createTheme, ThemeProvider, useTheme } = createStylex({ theme, media, utils, themeMap });
+```
+
+- **`create(styleDefs)`** — Called at module level. Accepts a map of style definitions (each can have `variants`, `compoundVariants`, `defaultVariants`). Returns a `StyleEntry` map.
+- **`props(styleEntry | variantSpec)`** — Returns `{ style: StyleObject[] }` to spread on a component. Uses the default theme; reads `Dimensions.get()` synchronously (non-reactive for media queries).
+- **`variants(entry, variantProps)`** — Wraps a `StyleEntry` with variant prop values (supports responsive objects like `{ '@initial': 'sm', '@md': 'lg' }`). Pass the result to `props()`.
+- **`useStylex()`** — Hook returning `{ props, variants }` that are reactive to the current `ThemeProvider` theme and `useWindowDimensions()`. Use this inside components when theme-switching or media-reactive behavior is needed.
+
+Usage pattern:
+
+```tsx
+// module level
+const styles = stylex.create({
+  button: {
+    padding: '$2',
+    variants: {
+      size: { sm: { padding: '$1' }, lg: { padding: '$3' } },
+    },
+  },
+});
+
+// inside component
+function Button({ size }) {
+  const sx = stylex.useStylex();
+  return <Pressable {...sx.props(sx.variants(styles.button, { size }))} />;
+}
+```
+
 ## Architecture
 
-All runtime logic lives in `src/internals/`. Types are declaration files in `src/types/` and are not compiled.
+All runtime logic lives in `src/internals/`. Types are declaration files in `src/types/` and are not compiled. The build source (`react-native-builder-bob`) is `src/internals/`.
 
 ### Render-time style pipeline
 
-When a `styled()` component renders:
+When `useStylex().props(input)` is called inside a component:
 
 1. `useThemeInternal()` reads the current theme from React Context
-2. `createStyleSheet()` is called once per theme (cached in `styleSheets[theme.__ID__]` via `useMemo`) — this pre-processes all base/variant/compound-variant styles by resolving theme tokens into actual values via `StyleSheet.create()`
-3. `useMediaQueries()` evaluates active breakpoints against `useWindowDimensions()` width (corrected by `PixelRatio`)
-4. `useProcessedStyleSheet()` inlines active media query styles into the flat stylesheet
-5. `useVariantStyles()` and `useCompoundVariantStyles()` look up pre-computed styles from the flat sheet by key (e.g. `color_primary`, `color_primary+size_small`)
-6. Final `style` prop is: `[base, ...variantStyles, ...compoundVariantStyles, cssStyles, props.style]`
+2. `resolveProps()` lazy-creates and caches `StyleSheet.create()` output per theme in `entry._sheets[themeId]`
+3. `processStyleSheet()` inlines active media query styles into the flat sheet (computed from `useWindowDimensions()` + `PixelRatio`)
+4. `resolveVariantStylesList()` and `resolveCompoundVariantStylesList()` look up pre-computed styles by key (e.g. `color_primary`, `v1_one+v2_two`)
+5. Returns `{ style: [base, ...variantStyles, ...compoundStyles] }` — always an array
+
+For the static `props()` (no hook), step 3 uses `Dimensions.get('window')` synchronously — non-reactive on dimension changes.
 
 ### Key design details
 
@@ -49,9 +83,7 @@ When a `styled()` component renders:
 
 **Media query order matters**: Responsive styles are applied in the order of `Object.entries(media)`. Later active queries overwrite earlier ones, so put more specific queries last.
 
-**Theming without ThemeProvider**: `useTheme()` throws if `ThemeProvider` is absent. The context default is `themes[0].definition` (the initial theme), so `ThemeProvider` is required even when using only the default theme if `useTheme()` is called.
-
-**`processTheme()` produces two structures**: `definition` (token objects with `.toString()` returning `$token`, used in JSX theme context value) and `values` (resolved primitives, used for actual style computation and passed to `.attrs()` callbacks).
+**`processTheme()` produces two structures**: `definition` (token objects with `.toString()` returning `$token`, used as the ThemeContext value) and `values` (resolved primitives, used for `StyleSheet.create()` and passed to `useTheme()`).
 
 ### Unsupported token types
 

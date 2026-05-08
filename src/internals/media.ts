@@ -1,4 +1,6 @@
 // @ts-nocheck
+export type Media = Record<string, string | boolean>;
+
 export function resolveMediaRangeQueries(media, width) {
   const activeMediaQueries = [];
 

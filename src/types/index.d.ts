@@ -1,18 +1,17 @@
 /* eslint-disable */
-import type Stitches from './stitches';
+import type StylexInterface from './stylex';
 import type * as Config from './config';
 import type * as CSSUtil from './css-util';
-import type * as StyledComponent from './styled-component';
 
-export type CreateStitches = Config.CreateStitches;
+export type CreateStylex = Config.CreateStylex;
 export type CSSProperties = CSSUtil.CSSProperties;
 export type DefaultThemeMap = Config.DefaultThemeMap;
-export type __Stitches__ = Stitches;
+
+export type { StyleEntry, VariantSpec, StyleInput } from './stylex';
 
 /** Returns a Style interface from a configuration, leveraging the given media and style map. */
-
 export type CSS<
-  Config extends {
+  Cfg extends {
     media?: {};
     theme?: {};
     themeMap?: {};
@@ -24,10 +23,10 @@ export type CSS<
     utils: {};
   }
 > = CSSUtil.CSS<
-  Config['media'],
-  Config['theme'],
-  Config['themeMap'],
-  Config['utils']
+  Cfg['media'],
+  Cfg['theme'],
+  Cfg['themeMap'],
+  Cfg['utils']
 >;
 
 /** Returns the properties, attributes, and children expected by a component. */
@@ -45,24 +44,36 @@ export type PropertyValue<K extends keyof CSSUtil.CSSProperties> = {
 /** Returns a type that expects a value to be a kind of theme scale value. */
 export type ScaleValue<K> = { readonly [CSSUtil.$$ScaleValue]: K };
 
-/** Returns a type that suggests variants from a component as possible prop values. */
-export type VariantProps<Component extends { [key: symbol | string]: any }> =
-  StyledComponent.TransformProps<
-    Component[StyledComponent.$$StyledComponentProps],
-    Component[StyledComponent.$$StyledComponentMedia]
-  >;
+/**
+ * Extracts variant props from a StyleEntry returned by `create()`.
+ *
+ * @example
+ * const styles = stylex.create({ button: { variants: { size: { sm: {...}, lg: {...} } } } });
+ * type ButtonVariants = VariantProps<typeof styles.button>;
+ * // => { size?: 'sm' | 'lg' | ResponsiveVariant<...> }
+ */
+export type VariantProps<
+  Entry extends StylexInterface['create'] extends (d: any) => infer R
+    ? R[keyof R]
+    : never
+> = Entry extends import('./stylex').StyleEntry<infer V>
+  ? { [K in keyof V]?: keyof V[K] | string }
+  : {};
 
 /** Map of CSS properties to token scales. */
 export declare const defaultThemeMap: DefaultThemeMap;
 
-/** Returns a library used to create styles. */
-export declare const createStitches: CreateStitches;
+/** Creates a StyleX-like styling API configured with themes, media, and utils. */
+export declare const createStylex: CreateStylex;
 
-/** Returns an object representing a theme. */
-export declare const createTheme: Stitches['createTheme'];
+/** Returns a StyleEntry map from style definitions (from the default no-config instance). */
+export declare const create: StylexInterface['create'];
 
-/** Returns a function that applies styles and variants for a specific class. */
-export declare const css: Stitches['css'];
+/** Resolves a StyleEntry or VariantSpec to `{ style }` props (from the default no-config instance). */
+export declare const props: StylexInterface['props'];
 
-/** Returns a function that applies styles and variants for a specific class. */
-export declare const styled: Stitches['styled'];
+/** Wraps a StyleEntry with variant props (from the default no-config instance). */
+export declare const variants: StylexInterface['variants'];
+
+/** Hook returning theme-reactive `{ props, variants }` (from the default no-config instance). */
+export declare const useStylex: StylexInterface['useStylex'];

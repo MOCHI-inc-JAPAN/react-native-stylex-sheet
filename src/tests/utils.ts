@@ -21,6 +21,14 @@ export function mockDimensions({
     roundToNearestPixel: (layoutSize: number) =>
       Math.round(layoutSize * pixelRatio) / pixelRatio,
   }));
+  jest.doMock('react-native/Libraries/Utilities/Dimensions', () => ({
+    __esModule: true,
+    default: {
+      get: jest.fn().mockReturnValue({ width, height }),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+    },
+  }));
 }
 
 export function reduceStyles(s: any) {

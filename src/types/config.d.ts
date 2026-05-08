@@ -1,6 +1,7 @@
 /* eslint-disable */
 import type * as CSSUtil from './css-util';
 import type Stitches from './stitches';
+import type StylexInterface from './stylex';
 
 /** Configuration Interface */
 declare namespace ConfigType {
@@ -146,4 +147,19 @@ export type CreateStitches = {
     themeMap?: ConfigType.ThemeMap<ThemeMap>;
     utils?: ConfigType.Utils<Utils>;
   }): Stitches<Media, Theme, ThemeMap, Utils>;
+};
+
+/** Returns a function used to create a new StyleX-like interface. */
+export type CreateStylex = {
+  <
+    Media extends {} = {},
+    Theme extends {} = {},
+    ThemeMap extends {} = DefaultThemeMap,
+    Utils extends {} = {}
+  >(config?: {
+    media?: ConfigType.Media<Media>;
+    theme?: ConfigType.Theme<Theme>;
+    themeMap?: ConfigType.ThemeMap<ThemeMap>;
+    utils?: ConfigType.Utils<Utils>;
+  }): StylexInterface<Media, Theme, ThemeMap, Utils>;
 };
