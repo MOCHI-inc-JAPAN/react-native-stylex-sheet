@@ -1,7 +1,15 @@
-import * as stitches from './styled';
+export { create, props, useStylex, ThemeProvider, vars, darkTheme } from './styled';
+export type { StyleEntry, ThemeOverride } from '@mochi-inc-japan/react-native-stylex-sheet';
 
-const { styled, css, createTheme, useTheme, theme, darkTheme, ThemeProvider } = stitches; // prettier-ignore
-
-export { Theme } from './styled';
-export { themeProp } from './helpers';
-export { styled, css, createTheme, useTheme, theme, darkTheme, ThemeProvider };
+export type SpaceKey =
+  | 'none'
+  | '1'
+  | '2'
+  | '3'
+  | '4'
+  | '5'
+  | '6'
+  | '7'
+  | '8'
+  | '9'
+  | 'max';

@@ -1,15 +1,55 @@
 import React, { Fragment } from 'react';
-import { ViewStyle } from 'react-native';
+import { View, ViewStyle } from 'react-native';
+import type { StyleEntry } from '../styles';
 import { Spacer } from './Spacer';
-
-import { styled, Theme } from '../styles';
+import { create, useStylex } from '../styles';
+import type { SpaceKey } from '../styles';
 import { flattenChildren } from './utils';
 
+const stackStyles = create({
+  base: {},
+  axisX: { flexDirection: 'row' },
+  axisY: { flexDirection: 'column' },
+  alignCenter: { alignItems: 'center' },
+  alignStart: { alignItems: 'flex-start' },
+  alignEnd: { alignItems: 'flex-end' },
+  alignStretch: { alignItems: 'stretch' },
+  justifyCenter: { justifyContent: 'center' },
+  justifyStart: { justifyContent: 'flex-start' },
+  justifyEnd: { justifyContent: 'flex-end' },
+  justifyBetween: { justifyContent: 'space-between' },
+  justifyAround: { justifyContent: 'space-around' },
+});
+
+type Axis = 'x' | 'y';
+type Align = 'center' | 'start' | 'end' | 'stretch';
+type Justify = 'center' | 'start' | 'end' | 'between' | 'around';
+
+const AXIS_STYLES: Record<Axis, StyleEntry> = {
+  x: stackStyles.axisX,
+  y: stackStyles.axisY,
+};
+
+const ALIGN_STYLES: Record<Align, StyleEntry> = {
+  center: stackStyles.alignCenter,
+  start: stackStyles.alignStart,
+  end: stackStyles.alignEnd,
+  stretch: stackStyles.alignStretch,
+};
+
+const JUSTIFY_STYLES: Record<Justify, StyleEntry> = {
+  center: stackStyles.justifyCenter,
+  start: stackStyles.justifyStart,
+  end: stackStyles.justifyEnd,
+  between: stackStyles.justifyBetween,
+  around: stackStyles.justifyAround,
+};
+
 type Props = {
-  space: keyof Theme['space'];
-  axis?: 'x' | 'y';
-  align?: 'center' | 'start' | 'end' | 'stretch';
-  justify?: 'center' | 'start' | 'end' | 'between' | 'around';
+  space: SpaceKey;
+  axis?: Axis;
+  align?: Align;
+  justify?: Justify;
   style?: ViewStyle;
   debug?: boolean;
   children: React.ReactNode;
@@ -22,23 +62,27 @@ export function Stack({
   align,
   justify,
   debug,
-  ...rest
+  style,
 }: Props) {
-  // Handle `React.Fragments` by flattening children
+  const sx = useStylex();
   const elements = flattenChildren(children).filter((e) =>
     React.isValidElement(e)
   );
-
   const lastIndex = React.Children.count(elements) - 1;
 
+  const { style: computedStyle } = sx.props(
+    stackStyles.base,
+    axis && AXIS_STYLES[axis],
+    align && ALIGN_STYLES[align],
+    justify && JUSTIFY_STYLES[justify]
+  );
+
   return (
-    <StyledStack axis={axis} align={align} justify={justify} {...rest}>
+    <View style={style ? [...computedStyle, style] : computedStyle}>
       {elements.map((child, index) => {
         if (!React.isValidElement(child)) return null;
 
         const isSpacer = (child as any).type['__SPACER__'];
-
-        // Just return spacers as is so that they can override the default spacing
         if (isSpacer) return React.cloneElement(child);
 
         const isLast = index === lastIndex;
@@ -55,28 +99,6 @@ export function Stack({
           </Fragment>
         );
       })}
-    </StyledStack>
+    </View>
   );
 }
-
-const StyledStack = styled('View', {
-  variants: {
-    axis: {
-      x: { flexDirection: 'row' },
-      y: { flexDirection: 'column' },
-    },
-    align: {
-      center: { alignItems: 'center' },
-      start: { alignItems: 'flex-start' },
-      end: { alignItems: 'flex-end' },
-      stretch: { alignItems: 'stretch' },
-    },
-    justify: {
-      center: { justifyContent: 'center' },
-      start: { justifyContent: 'flex-start' },
-      end: { justifyContent: 'flex-end' },
-      between: { justifyContent: 'space-between' },
-      around: { justifyContent: 'space-around' },
-    },
-  },
-});

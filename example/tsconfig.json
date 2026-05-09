@@ -3,7 +3,7 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "stitches-native": ["../src/types/index.d.ts"]
+      "@mochi-inc-japan/react-native-stylex-sheet": ["../src/types/index.d.ts"]
     }
   }
 }

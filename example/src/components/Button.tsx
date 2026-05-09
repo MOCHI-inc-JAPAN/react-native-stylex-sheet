@@ -1,75 +1,68 @@
-import type * as Stitches from 'stitches-native';
-import { styled } from '../styles';
+import { TouchableOpacity } from 'react-native';
+import type { StyleEntry } from '../styles';
+import { create, useStylex, vars } from '../styles';
 import { Text } from './Text';
 
-type StyledButtonVariants = Stitches.VariantProps<typeof StyledButton>;
-
-type Props = StyledButtonVariants & {
-  children: string;
-};
-
-export function Button({ children, ...props }: Props) {
-  return (
-    <StyledButton {...props}>
-      <Text variant="body">{children}</Text>
-    </StyledButton>
-  );
-}
-
-const StyledButton = styled('TouchableOpacity', {
-  justifyContent: 'center',
-  alignItems: 'center',
-  borderRadius: 999,
-  minWidth: 100,
-  backgroundColor: '$primary',
-  shadow: 'medium',
-
-  variants: {
-    variant: {
-      primary: {
-        backgroundColor: '$primary',
-      },
-      secondary: {
-        backgroundColor: '$secondary',
-      },
-    },
-    size: {
-      small: {
-        height: 32,
-        paddingHorizontal: '$2',
-      },
-      large: {
-        height: 44,
-        paddingHorizontal: '$3',
-      },
-    },
-    outlined: {
-      true: {
-        borderWidth: 1,
-        shadow: 'none',
-      },
-    },
+const buttonStyles = create({
+  base: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 999,
+    minWidth: 100,
+    backgroundColor: vars.primary,
+    shadow: 'medium',
   },
-  compoundVariants: [
-    {
-      variant: 'primary',
-      outlined: true,
-      css: {
-        borderColor: '$primary',
-        backgroundColor: 'transparent',
-      },
-    },
-    {
-      variant: 'secondary',
-      outlined: true,
-      css: {
-        borderColor: '$secondary',
-        backgroundColor: 'transparent',
-      },
-    },
-  ],
-  defaultVariants: {
-    variant: 'primary',
-    size: 'large',
+  variantPrimary: { backgroundColor: vars.primary },
+  variantSecondary: { backgroundColor: vars.secondary },
+  sizeSm: { height: 32, paddingHorizontal: vars.space2 },
+  sizeLg: { height: 44, paddingHorizontal: vars.space3 },
+  outlined: { borderWidth: 1, shadow: 'none' },
+  outlinedPrimary: { borderColor: vars.primary, backgroundColor: 'transparent' },
+  outlinedSecondary: {
+    borderColor: vars.secondary,
+    backgroundColor: 'transparent',
   },
 });
+
+type ButtonVariant = 'primary' | 'secondary';
+type ButtonSize = 'small' | 'large';
+
+const VARIANT_STYLES: Record<ButtonVariant, StyleEntry> = {
+  primary: buttonStyles.variantPrimary,
+  secondary: buttonStyles.variantSecondary,
+};
+
+const OUTLINED_VARIANT_STYLES: Record<ButtonVariant, StyleEntry> = {
+  primary: buttonStyles.outlinedPrimary,
+  secondary: buttonStyles.outlinedSecondary,
+};
+
+type Props = {
+  children: string;
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  outlined?: boolean;
+};
+
+export function Button({
+  children,
+  variant = 'primary',
+  size = 'large',
+  outlined = false,
+}: Props) {
+  const sx = useStylex();
+  return (
+    <TouchableOpacity
+      {...sx.props(
+        buttonStyles.base,
+        VARIANT_STYLES[variant],
+        size === 'small' && buttonStyles.sizeSm,
+        size === 'large' && buttonStyles.sizeLg,
+        outlined && buttonStyles.outlined,
+        outlined && OUTLINED_VARIANT_STYLES[variant]
+      )}
+    >
+      <Text variant="body">{children}</Text>
+    </TouchableOpacity>
+  );
+}

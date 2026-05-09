@@ -1,34 +1,8 @@
-import * as React from 'react';
+import { OpaqueColorValue, ImageStyle, ViewStyle, TextStyle } from 'react-native';
 
-import {
-  ButtonProps,
-  FlatListProps,
-  ImageBackgroundProps,
-  ImageProps,
-  ImageStyle,
-  InputAccessoryViewProps,
-  KeyboardAvoidingViewProps,
-  OpaqueColorValue,
-  PressableProps,
-  ScrollViewProps,
-  SectionListProps,
-  TextInputProps,
-  TextProps,
-  TextStyle,
-  TouchableHighlightProps,
-  TouchableNativeFeedbackProps,
-  TouchableOpacityProps,
-  TouchableWithoutFeedbackProps,
-  ViewProps,
-  ViewStyle,
-  VirtualizedListProps,
-} from 'react-native';
-
-type StringProperty = string & {};
 type ColorProperty = OpaqueColorValue | (string & {});
 type SimpleNumberProperty = number | (string & {});
 type NumberProperty<TLength> = TLength | number | (string & {});
-// TODO: do we need both `SimpleNumberProperty` and `NumberProperty`?
 
 export interface ReactNativeProperties<TLength = (string & {}) | 0> {
   alignContent: ViewStyle['alignContent'];
@@ -66,14 +40,13 @@ export interface ReactNativeProperties<TLength = (string & {}) | 0> {
   direction: ViewStyle['direction'];
   display: ViewStyle['display'];
   elevation: NumberProperty<TLength>;
-  end: SimpleNumberProperty;
   flex: NumberProperty<TLength>;
   flexBasis: NumberProperty<TLength>;
   flexDirection: ViewStyle['flexDirection'];
   flexGrow: NumberProperty<TLength>;
   flexShrink: NumberProperty<TLength>;
   flexWrap: ViewStyle['flexWrap'];
-  fontFamily: StringProperty;
+  fontFamily: string & {};
   fontSize: NumberProperty<TLength>;
   fontStyle: TextStyle['fontStyle'];
   fontVariant: TextStyle['fontVariant'];
@@ -116,7 +89,6 @@ export interface ReactNativeProperties<TLength = (string & {}) | 0> {
   shadowOffset: ViewStyle['shadowOffset'];
   shadowOpacity: SimpleNumberProperty;
   shadowRadius: SimpleNumberProperty;
-  start: NumberProperty<TLength>;
   textAlign: TextStyle['textAlign'];
   textDecorationColor: ColorProperty;
   textDecorationLine: TextStyle['textDecorationLine'];
@@ -131,46 +103,3 @@ export interface ReactNativeProperties<TLength = (string & {}) | 0> {
   writingDirection: TextStyle['writingDirection'];
   zIndex: SimpleNumberProperty;
 }
-
-type PropsWithChildren<T> = T & { children?: React.ReactNode };
-
-export type ReactNativeElements = {
-  Button: PropsWithChildren<ButtonProps>;
-  FlatList: FlatListProps<any>;
-  Image: PropsWithChildren<ImageProps>;
-  ImageBackground: PropsWithChildren<ImageBackgroundProps>;
-  InputAccessoryView: PropsWithChildren<InputAccessoryViewProps>;
-  KeyboardAvoidingView: PropsWithChildren<KeyboardAvoidingViewProps>;
-  Pressable: PropsWithChildren<PressableProps>;
-  SafeAreaView: PropsWithChildren<ViewProps>;
-  ScrollView: PropsWithChildren<ScrollViewProps>;
-  SectionList: SectionListProps<any>;
-  Text: PropsWithChildren<TextProps>;
-  TextInput: PropsWithChildren<TextInputProps>;
-  TouchableHighlight: PropsWithChildren<TouchableHighlightProps>;
-  TouchableNativeFeedback: PropsWithChildren<TouchableNativeFeedbackProps>;
-  TouchableOpacity: PropsWithChildren<TouchableOpacityProps>;
-  TouchableWithoutFeedback: PropsWithChildren<TouchableWithoutFeedbackProps>;
-  View: PropsWithChildren<ViewProps>;
-  VirtualizedList: VirtualizedListProps<any>;
-};
-
-export type ReactNativeElementsKeys = keyof ReactNativeElements;
-
-// prettier-ignore
-export type ReactNativeElementType<P = any> =
-  | { [K in ReactNativeElementsKeys]: P extends ReactNativeElements[K] ? K : never }[ReactNativeElementsKeys]
-  | React.ComponentType<P>;
-
-type ReactNativeComponentProps<
-  T extends ReactNativeElementsKeys | React.JSXElementConstructor<any>
-> = T extends React.JSXElementConstructor<infer P>
-  ? P
-  : T extends ReactNativeElementsKeys
-  ? ReactNativeElements[T]
-  : {};
-
-export type ReactNativeComponentPropsWithRef<T extends ReactNativeElementType> =
-  T extends React.ComponentClass<infer P>
-    ? React.PropsWithoutRef<P> & React.RefAttributes<InstanceType<T>>
-    : React.PropsWithRef<ReactNativeComponentProps<T>>;

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-**Stitches Native** (`stitches-native` on npm) is a React Native CSS-in-JS library porting [Stitches](https://stitches.dev/) to iOS/Android. This repo (`react-native-stylex-sheet`) is a fork with TypeScript-migrated internals.
+**`@mochi-inc-japan/react-native-stylex-sheet`** is a React Native CSS-in-JS library with a StyleX-like API. The `example/` app imports it via the pnpm workspace alias and uses it end-to-end.
 
 React Native has no CSS variables, cascade, inheritance, keyframes, pseudo-elements, or global styles. These features are absent by design. Theming is implemented via React Context instead of CSS variables.
 
@@ -27,33 +27,47 @@ Build outputs go to `lib/commonjs/` and `lib/module/`. The source for the build 
 The library uses a StyleX-like API. Call `createStylex(config)` to get a configured instance:
 
 ```ts
-const { create, props, variants, useStylex, theme, createTheme, ThemeProvider, useTheme } = createStylex({ theme, media, utils, themeMap });
+const { create, props, useStylex, defineVars, createTheme, ThemeProvider } =
+  createStylex({ media, utils });
 ```
 
+- **`defineVars(defaults)`** — Defines a group of theme variables with default values. Returns `ThemeToken` objects usable as style values in `create()`.
+- **`createTheme(vars, overrides)`** — Creates a `ThemeOverride` from a `VarsGroup`. Pass to `ThemeProvider` to activate. All keys of `vars` must be provided in `overrides`.
 - **`create(styleDefs)`** — Called at module level. Accepts a map of style definitions (each can have `variants`, `compoundVariants`, `defaultVariants`). Returns a `StyleEntry` map.
-- **`props(styleEntry | variantSpec)`** — Returns `{ style: StyleObject[] }` to spread on a component. Uses the default theme; reads `Dimensions.get()` synchronously (non-reactive for media queries).
-- **`variants(entry, variantProps)`** — Wraps a `StyleEntry` with variant prop values (supports responsive objects like `{ '@initial': 'sm', '@md': 'lg' }`). Pass the result to `props()`.
-- **`useStylex()`** — Hook returning `{ props, variants }` that are reactive to the current `ThemeProvider` theme and `useWindowDimensions()`. Use this inside components when theme-switching or media-reactive behavior is needed.
+- **`props(...styleEntries)`** — Returns `{ style: StyleProp<any> }` to spread on a component. Uses default token values; reads `Dimensions.get()` synchronously (non-reactive for media queries).
+- **`useStylex()`** — Hook returning `{ props }` that is reactive to the current `ThemeProvider` theme and `useWindowDimensions()`. Use this inside components when theme-switching or media-reactive behavior is needed.
 
 Usage pattern:
 
 ```tsx
 // module level
+const vars = stylex.defineVars({ padding: 8, color: 'blue' });
+
 const styles = stylex.create({
   button: {
-    padding: '$2',
-    variants: {
-      size: { sm: { padding: '$1' }, lg: { padding: '$3' } },
-    },
+    padding: vars.padding,
+    backgroundColor: vars.color,
   },
+  sizeSm: { height: 32 },
+  sizeLg: { height: 44 },
 });
 
 // inside component
-function Button({ size }) {
+function Button({ size }: { size: 'sm' | 'lg' }) {
   const sx = stylex.useStylex();
-  return <Pressable {...sx.props(sx.variants(styles.button, { size }))} />;
+  return (
+    <Pressable
+      {...sx.props(
+        styles.button,
+        size === 'sm' && styles.sizeSm,
+        size === 'lg' && styles.sizeLg
+      )}
+    />
+  );
 }
 ```
+
+**Variant pattern**: Since `props()` only applies `defaultVariants` automatically, dynamic variants are expressed as separate `StyleEntry` objects passed conditionally to `props()`.
 
 ## Architecture
 
@@ -63,8 +77,8 @@ All runtime logic lives in `src/internals/`. Types are declaration files in `src
 
 When `useStylex().props(input)` is called inside a component:
 
-1. `useThemeInternal()` reads the current theme from React Context
-2. `resolveProps()` lazy-creates and caches `StyleSheet.create()` output per theme in `entry._sheets[themeId]`
+1. `useContext(ThemeContext)` reads the current `ThemeOverride` (or `null` for defaults)
+2. `resolveEntry()` lazy-creates and caches `StyleSheet.create()` output per theme in `entry._sheets[themeId]`
 3. `processStyleSheet()` inlines active media query styles into the flat sheet (computed from `useWindowDimensions()` + `PixelRatio`)
 4. `resolveVariantStylesList()` and `resolveCompoundVariantStylesList()` look up pre-computed styles by key (e.g. `color_primary`, `v1_one+v2_two`)
 5. Returns `{ style: [base, ...variantStyles, ...compoundStyles] }` — always an array
@@ -73,18 +87,20 @@ For the static `props()` (no hook), step 3 uses `Dimensions.get('window')` synch
 
 ### Key design details
 
-**Token resolution** (`src/internals/styles.ts` `processStyles`): `$token` syntax resolves via `themeMap` (CSS property → scale mapping). `$scale$token` resolves explicitly. Negative tokens (`$-space$2`) are handled by checking for a `-` sign segment.
+**Token resolution** (`src/internals/styles.ts` `resolveTokensDeep`): Style values that are `ThemeToken` objects (from `defineVars()`) are replaced with their resolved values at `StyleSheet.create()` time. Without a `ThemeProvider`, `token.__default` is used.
 
 **Utils are recursive**: `flattenStyles()` in `src/internals/utils.ts` expands util functions before storing styles. A util can call other utils; media keys (`@bp1`) are stripped of `@` and stored as nested objects at flatten time.
 
 **Compound variant keys** are alphabetically sorted and joined: `color_primary+size_small`. Key ordering is deterministic regardless of definition order.
 
-**Token aliases require `as const`**: To get the resolved type (e.g. `number`) when accessing an aliased token via `useTheme()`, the alias value must be typed `as const` in the config. Without it, TypeScript infers `string`.
-
 **Media query order matters**: Responsive styles are applied in the order of `Object.entries(media)`. Later active queries overwrite earlier ones, so put more specific queries last.
 
-**`processTheme()` produces two structures**: `definition` (token objects with `.toString()` returning `$token`, used as the ThemeContext value) and `values` (resolved primitives, used for `StyleSheet.create()` and passed to `useTheme()`).
+**`defineVars` / `createTheme`**: `defineVars` assigns each token a unique `__varId`. `createTheme(vars, overrides)` builds a `ThemeOverride` that maps `__varId` → resolved value, which `useStylex()` applies when computing styles.
 
 ### Unsupported token types
 
 `shadows` (iOS/Android have incompatible APIs) and `transitions` are intentionally excluded. Use `utils` to implement shadow helpers.
+
+## Example app
+
+The `example/` app uses `@mochi-inc-japan/react-native-stylex-sheet` (workspace package). Styles are configured in `example/src/styles/styled.ts` which exports `create`, `props`, `useStylex`, `ThemeProvider`, `vars`, and `darkTheme`. Components import exclusively from `../styles`, not directly from the package.

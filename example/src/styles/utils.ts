@@ -1,6 +1,5 @@
 import { CSSProperties } from 'react';
 import { StyleSheet } from 'react-native';
-import type * as Stitches from 'stitches-native';
 
 export type TypographyVariant =
   | 'body'
@@ -12,48 +11,21 @@ export type TypographyVariant =
 
 type TypographyVariantVar = `$${TypographyVariant}`;
 
-// TODO: is there a way to type tokens? Using `CSS` from `styled.ts` doesn't work
-// because it causes a circular type dependency since `typography` is used in `utils`.
-const typographyVariants: {
-  [variant in TypographyVariantVar]: CSSProperties;
-} = {
-  $title1: {
-    fontSize: '$xxl',
-    fontWeight: '$bold',
-  },
-  $title2: {
-    fontSize: '$xl',
-    fontWeight: '$bold',
-  },
-  $title3: {
-    fontSize: '$lg',
-    fontWeight: '$bold',
-  },
-  $body: {
-    fontSize: '$md',
-    fontWeight: '$normal',
-  },
-  $bodySmall: {
-    fontSize: '$sm',
-    fontWeight: '$normal',
-  },
-  $bodyExtraSmall: {
-    fontSize: '$xs',
-    fontWeight: '$semibold',
-  },
+const typographyVariants: { [variant in TypographyVariantVar]: CSSProperties } = {
+  $title1: { fontSize: 32, fontWeight: '700' },
+  $title2: { fontSize: 24, fontWeight: '700' },
+  $title3: { fontSize: 20, fontWeight: '700' },
+  $body: { fontSize: 18, fontWeight: '400' },
+  $bodySmall: { fontSize: 16, fontWeight: '400' },
+  $bodyExtraSmall: { fontSize: 14, fontWeight: '500' },
 };
 
-export const typography = (value: TypographyVariantVar) => {
-  return typographyVariants[value];
-};
+export const typography = (value: TypographyVariantVar) => typographyVariants[value];
 
-export const size = (value: Stitches.PropertyValue<'width'>) => ({
-  width: value,
-  height: value,
-});
+export const size = (value: number | string) => ({ width: value, height: value });
 
-export const shadow = (level: 'none' | 'small' | 'medium' | 'large') => {
-  return {
+export const shadow = (level: 'none' | 'small' | 'medium' | 'large') =>
+  ({
     none: {
       elevation: 0,
       shadowOffset: { width: 0, height: 0 },
@@ -82,84 +54,25 @@ export const shadow = (level: 'none' | 'small' | 'medium' | 'large') => {
       shadowOpacity: 0.4,
       shadowColor: '#000',
     },
-  }[level];
-};
+  })[level];
 
 export const flexCenter = (
-  value?: Stitches.PropertyValue<'flexDirection'>
+  value?: 'row' | 'column' | 'row-reverse' | 'column-reverse'
 ) => ({
   flexDirection: value || 'column',
   justifyContent: 'center',
   alignItems: 'center',
 });
 
-export const absoluteFill = () => ({
-  ...StyleSheet.absoluteFillObject,
-});
+export const absoluteFill = () => ({ ...StyleSheet.absoluteFillObject });
 
-export const generateSameMediaProperty = <
-  Property extends keyof CSSProperties,
-  Value
->(
-  property: Property,
-  value: Value
-) => {
-  return {
-    '@xl': {
-      [property]: value,
-    },
-    '@lg': {
-      [property]: value,
-    },
-    '@md': {
-      [property]: value,
-    },
-    '@sm': {
-      [property]: value,
-    },
-    '@xsm': {
-      [property]: value,
-    },
-    '@xxsm': {
-      [property]: value,
-    },
-  };
-};
-
-const fontSizes = {
-  xxs: 10,
-  xs: 14,
-  sm: 16,
-  md: 18,
-  lg: 20,
-  xl: 24,
-  xxl: 32,
-};
+const fontSizes = { xxl: 32, xl: 24, lg: 20, md: 18 };
 
 export const remFunction =
   <Property extends keyof CSSProperties>(property: Property) =>
-  (rValue: number) => {
-    return {
-      '@xxl': {
-        [property]: fontSizes.xxl * rValue,
-      },
-      '@xl': {
-        [property]: fontSizes.xl * rValue,
-      },
-      '@lg': {
-        [property]: fontSizes.lg * rValue,
-      },
-      '@md': {
-        [property]: fontSizes.md * rValue,
-      },
-      '@sm': {
-        [property]: fontSizes.sm * rValue,
-      },
-      '@xs': {
-        [property]: fontSizes.xs * rValue,
-      },
-      '@xxs': {
-        [property]: fontSizes.xs * rValue,
-      },
-    } as Record<`@${keyof typeof fontSizes}`, CSSProperties>;
-  };
+  (rValue: number): any => ({
+    '@xxl': { [property]: fontSizes.xxl * rValue },
+    '@xl': { [property]: fontSizes.xl * rValue },
+    '@lg': { [property]: fontSizes.lg * rValue },
+    '@md': { [property]: fontSizes.md * rValue },
+  });

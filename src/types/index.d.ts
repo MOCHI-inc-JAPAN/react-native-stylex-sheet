@@ -8,32 +8,6 @@ export type CSSProperties = CSSUtil.CSSProperties;
 
 export type { ThemeToken, VarsGroup, ThemeOverride, StyleEntry, StyleItem } from './stylex';
 
-/** Returns a Style interface from a configuration, leveraging the given media and style map. */
-export type CSS<
-  Cfg extends {
-    media?: {};
-    utils?: {};
-  } = {
-    media: {};
-    utils: {};
-  }
-> = CSSUtil.CSS<Cfg['media'], {}, {}, Cfg['utils']>;
-
-/** Returns the properties, attributes, and children expected by a component. */
-export type ComponentProps<Component> = Component extends (
-  ...args: any[]
-) => any
-  ? Parameters<Component>[0]
-  : never;
-
-/** Returns a type that expects a value to be a kind of CSS property value. */
-export type PropertyValue<K extends keyof CSSUtil.CSSProperties> = {
-  readonly [CSSUtil.$$PropertyValue]: K;
-};
-
-/** Returns a type that expects a value to be a kind of theme scale value. */
-export type ScaleValue<K> = { readonly [CSSUtil.$$ScaleValue]: K };
-
 /** Creates a StyleX-like styling API configured with media and utils. */
 export declare const createStylex: CreateStylex;
 

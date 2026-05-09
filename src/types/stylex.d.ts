@@ -1,6 +1,6 @@
 /* eslint-disable */
 import type * as React from 'react';
-import type { StyleProp, ViewStyle } from 'react-native';
+import type { StyleProp } from 'react-native';
 import type { ThemeToken, VarsGroup, ThemeOverride } from './tokens';
 import type * as CSSUtil from './css-util';
 import type * as Util from './util';
@@ -57,7 +57,7 @@ export default interface StylexInterface<
    * @example
    * <View {...stylex.props(styles.base, isHighlighted && styles.highlighted)} />
    */
-  props(...styles: StyleItem[]): { style: StyleProp<ViewStyle> };
+  props(...styles: StyleItem[]): { style: StyleProp<any> };
 
   /**
    * React hook returning a media- and theme-reactive props function.
@@ -70,7 +70,7 @@ export default interface StylexInterface<
    * }
    */
   useStylex(): {
-    props(...styles: StyleItem[]): { style: StyleProp<ViewStyle> };
+    props(...styles: StyleItem[]): { style: StyleProp<any> };
   };
 
   /**

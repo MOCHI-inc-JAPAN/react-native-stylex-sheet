@@ -6,7 +6,8 @@ import {
   useCallback,
 } from 'react';
 
-import { theme as lightTheme, darkTheme, ThemeProvider } from '../styles';
+import { ThemeProvider, darkTheme } from '../styles';
+import type { ThemeOverride } from '../styles';
 
 type ColorMode = 'light' | 'dark';
 
@@ -20,7 +21,7 @@ const ColorModeContext = createContext<undefined | ContextValue>(undefined);
 
 export function ColorModeProvider({ children }: { children: ReactNode }) {
   const [colorMode, setColorMode] = useState<ColorMode>('light');
-  const theme = colorMode === 'light' ? lightTheme : darkTheme;
+  const theme: ThemeOverride | null = colorMode === 'light' ? null : darkTheme;
 
   const toggleColorMode = useCallback(() => {
     setColorMode((p) => (p === 'dark' ? 'light' : 'dark'));

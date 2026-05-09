@@ -3,7 +3,7 @@ const path = require('path');
 const { getDefaultConfig } = require('expo/metro-config');
 
 const packagesRelative = {
-  'stitches-native': '../src/internals',
+  '@mochi-inc-japan/react-native-stylex-sheet': '../src/internals',
 };
 
 const packages = Object.fromEntries(

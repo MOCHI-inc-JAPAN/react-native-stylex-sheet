@@ -1,98 +1,65 @@
-import { TextProps as RNTextProps } from 'react-native';
-import { styled, css } from '../styles';
+import { Text as RNText, TextProps } from 'react-native';
+import type { StyleEntry } from '../styles';
+import { create, useStylex } from '../styles';
 
-export const Typography = styled('Text', {
-  color: '$text',
-  fontSizeRem: 1,
+const headingStyles = create({
+  base: { fontWeight: 'bold', color: 'black' },
+  h1: { fontSize: 40, color: 'purple' },
+  h2: { fontSize: 24, color: 'green' },
+  h3: { fontSize: 20, color: 'blue' },
+  h4: { fontSize: 17.6, color: 'red' },
+  h5: { fontSize: 16, color: 'black' },
+  underlined: { paddingRight: 4, paddingLeft: 4 },
+  defaultH1NoUnderline: { marginBottom: 2 },
+  // Compound variant equivalents: underline border color per heading
+  // NOTE: RN Text cannot render borderBottom — wrap in View if needed
+  underlinedH1: { borderBottomColor: 'purple', borderBottomWidth: 1 },
+  underlinedH2: { borderBottomColor: 'green', borderBottomWidth: 1 },
+  underlinedH3: { borderBottomColor: 'blue', borderBottomWidth: 1 },
+  underlinedH4: { borderBottomColor: 'red', borderBottomWidth: 1 },
+  underlinedH5: { borderBottomColor: 'black', borderBottomWidth: 1 },
 });
 
 type HeadingSize = 'h1' | 'h2' | 'h3' | 'h4' | 'h5';
 
-export type HeadingProps = RNTextProps & {
+export type HeadingProps = TextProps & {
   heading?: HeadingSize;
+  underlined?: boolean;
 };
 
-const underLinedStyle = css({
-  compoundVariants: [
-    {
-      heading: 'h5',
-      underlined: true,
-      css: {
-        borderBottomColor: 'black',
-        borderBottomWidth: 1,
-      },
-    },
-    {
-      heading: 'h4',
-      underlined: true,
-      css: {
-        borderBottomColor: 'red',
-        borderBottomWidth: 1,
-      },
-    },
-    {
-      heading: 'h3',
-      underlined: true,
-      css: {
-        borderBottomColor: 'blue',
-        borderBottomWidth: 1,
-      },
-    },
-    {
-      heading: 'h2',
-      underlined: true,
-      css: {
-        borderBottomColor: 'green',
-        borderBottomWidth: 1,
-      },
-    },
-    {
-      heading: 'h1',
-      underlined: true,
-      css: {
-        borderBottomColor: 'purple',
-        borderBottomWidth: 1,
-      },
-    },
-    {
-      // NOTE: To check default variants
-      heading: 'h1',
-      underlined: false,
-      css: {
-        marginBottom: 2,
-      },
-    },
-  ],
-});
+const HEADING_STYLES: Record<HeadingSize, StyleEntry> = {
+  h1: headingStyles.h1,
+  h2: headingStyles.h2,
+  h3: headingStyles.h3,
+  h4: headingStyles.h4,
+  h5: headingStyles.h5,
+};
 
-export const Heading = styled(
-  'Text',
-  {
-    fontWeight: 'bold',
-    color: '$plainText',
-    variants: {
-      heading: {
-        h5: { fontSizeRem: 1.0, color: 'black' },
-        h4: { fontSizeRem: 1.1, color: 'red' },
-        h3: { fontSizeRem: 1.25, color: 'blue' },
-        h2: { fontSizeRem: 1.5, color: 'green' },
-        h1: { fontSizeRem: 2.5, color: 'purple' },
-      },
-      underlined: {
-        true: {
-          paddingRight: 4,
-          paddingLeft: 4,
-        },
-      },
-    },
-    defaultVariants: {
-      heading: 'h1',
-      underlined: false,
-    },
-  },
-  // TODO: fix this! Native `Text` cannot have a border bottom!
-  // The example needs to wrap the text with a `View` and apply the border bottom to that.
-  underLinedStyle
-).attrs(() => ({
-  accessibilityRole: 'text',
-}));
+const UNDERLINED_HEADING_STYLES: Record<HeadingSize, StyleEntry> = {
+  h1: headingStyles.underlinedH1,
+  h2: headingStyles.underlinedH2,
+  h3: headingStyles.underlinedH3,
+  h4: headingStyles.underlinedH4,
+  h5: headingStyles.underlinedH5,
+};
+
+export function Heading({
+  heading = 'h1',
+  underlined = false,
+  ...rest
+}: HeadingProps) {
+  const sx = useStylex();
+  return (
+    <RNText
+      accessibilityRole="text"
+      {...sx.props(
+        headingStyles.base,
+        HEADING_STYLES[heading],
+        underlined && headingStyles.underlined,
+        underlined && UNDERLINED_HEADING_STYLES[heading],
+        !underlined && heading === 'h1' && headingStyles.defaultH1NoUnderline
+      )}
+      {...rest}
+    />
+  );
+}

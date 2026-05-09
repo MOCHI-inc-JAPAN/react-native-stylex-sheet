@@ -27,7 +27,7 @@
     "target": "esnext",
     "types": ["node", "jest"],
     "paths": {
-      "stitches-native": ["./src/index"]
+      "@mochi-inc-japan/react-native-stylex-sheet": ["./src/types/index.d.ts"]
     }
   }
 }
