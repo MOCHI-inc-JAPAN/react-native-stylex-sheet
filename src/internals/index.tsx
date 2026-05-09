@@ -44,8 +44,7 @@ export type StyleInput = StyleEntry | VariantSpec;
 
 function isVariantSpec(input: StyleInput): input is VariantSpec {
   return (
-    '_isVariantSpec' in input &&
-    (input as VariantSpec)._isVariantSpec === true
+    '_isVariantSpec' in input && (input as VariantSpec)._isVariantSpec === true
   );
 }
 

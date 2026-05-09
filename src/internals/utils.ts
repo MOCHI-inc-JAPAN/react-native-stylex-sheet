@@ -1,7 +1,30 @@
-// @ts-nocheck
-import merge from 'lodash.merge';
+type StyleObject = Record<string, any>;
+type UtilMap = Record<string, (v: any) => StyleObject>;
 
-export function getCompoundKey(compoundEntries) {
+function isPlainObject(val: unknown): val is StyleObject {
+  return (
+    val !== null &&
+    typeof val === 'object' &&
+    !Array.isArray(val) &&
+    Object.getPrototypeOf(val) === Object.prototype
+  );
+}
+
+function merge(target: StyleObject, source: StyleObject): StyleObject {
+  for (const key of Object.keys(source)) {
+    const srcVal = source[key];
+    if (srcVal === undefined) continue;
+    const tgtVal = target[key];
+    if (isPlainObject(srcVal) && isPlainObject(tgtVal)) {
+      target[key] = merge({ ...tgtVal }, srcVal);
+    } else {
+      target[key] = srcVal;
+    }
+  }
+  return target;
+}
+
+export function getCompoundKey(compoundEntries: [string, any][]): string {
   // Eg. `color_primary+size_small`
   return (
     compoundEntries
@@ -75,8 +98,11 @@ export function getCompoundKey(compoundEntries) {
  *   }
  * }
  */
-export function flattenStyles(styles, utils) {
-  let flatStyles = {};
+export function flattenStyles(
+  styles: StyleObject,
+  utils: UtilMap | undefined
+): StyleObject {
+  let flatStyles: StyleObject = {};
 
   Object.entries(styles).forEach(([key, val]) => {
     if (key.startsWith('@')) {
@@ -85,7 +111,10 @@ export function flattenStyles(styles, utils) {
       if (!flatStyles[k]) {
         flatStyles[k] = {};
       }
-      flatStyles[k] = merge(flatStyles[k], flattenStyles(val, utils));
+      flatStyles[k] = merge(
+        flatStyles[k],
+        flattenStyles(val as StyleObject, utils)
+      );
     } else if (utils && key in utils) {
       // Utils
       const util = utils[key];
@@ -172,8 +201,11 @@ export function flattenStyles(styles, utils) {
  *   },
  * }
  */
-export function flattenVariantStyles(variants, utils) {
-  const flatVariants = {};
+export function flattenVariantStyles(
+  variants: Record<string, Record<string, StyleObject>>,
+  utils: UtilMap | undefined
+): Record<string, Record<string, StyleObject>> {
+  const flatVariants: Record<string, Record<string, StyleObject>> = {};
 
   Object.entries(variants).forEach(([variantProp, variantObj]) => {
     flatVariants[variantProp] = {};
@@ -251,7 +283,10 @@ export function flattenVariantStyles(variants, utils) {
  *   },
  * }]
  */
-export function flattenCompoundVariantStyles(compoundVariants, utils) {
+export function flattenCompoundVariantStyles(
+  compoundVariants: Array<Record<string, any>>,
+  utils: UtilMap | undefined
+): Array<Record<string, any>> {
   return compoundVariants.map((compoundVariant) => {
     return {
       ...compoundVariant,

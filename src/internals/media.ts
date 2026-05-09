@@ -1,7 +1,9 @@
-// @ts-nocheck
 export type Media = Record<string, string | boolean>;
 
-export function resolveMediaRangeQueries(media, width) {
+export function resolveMediaRangeQueries(
+  media: Media,
+  width: number
+): string[] {
   const activeMediaQueries = [];
 
   for (const [name, query] of Object.entries(media)) {
@@ -20,7 +22,7 @@ export function resolveMediaRangeQueries(media, width) {
 
 const validSigns = ['<=', '<', '>=', '>'];
 
-function matchMediaRangeQuery(query, windowWidth) {
+function matchMediaRangeQuery(query: string, windowWidth: number): boolean {
   const singleRangeRegex = /^\(width\s+([><=]+)\s+([0-9]+)px\)$/;
   const multiRangeRegex = /^\(([0-9]+)px\s([><=]+)\swidth\s+([><=]+)\s+([0-9]+)px\)$/; // prettier-ignore
   const singleRangeMatches = query.match(singleRangeRegex);

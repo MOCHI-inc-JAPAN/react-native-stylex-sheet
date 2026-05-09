@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { StyleSheet } from 'react-native';
 import { DEFAULT_THEME_MAP } from './constants';
 import { getThemeKey, processThemeMap } from './theme';
@@ -8,40 +7,55 @@ import { getCompoundKey } from './utils';
  * Process styles by replacing all theme tokens with their actual value.
  * NOTE: passed styles need to be flattened before calling this!
  */
-export function processStyles({ styles, theme, themeMap: customThemeMap }) {
+export function processStyles({
+  styles,
+  theme,
+  themeMap: customThemeMap,
+}: {
+  styles: Record<string, any>;
+  theme: Record<string, any>;
+  themeMap?: Record<string, string>;
+}): Record<string, any> {
   const themeMap = processThemeMap(customThemeMap || DEFAULT_THEME_MAP);
 
-  return Object.entries(styles).reduce((acc, [key, val]) => {
-    if (typeof val === 'string' && val.indexOf('$') !== -1) {
-      // Handle theme tokens, eg. `color: "$primary"` or `color: "$colors$primary"`
-      const arr = val.split('$');
-      const token = arr.pop();
-      const scaleOrSign = arr.pop();
-      const maybeSign = arr.pop(); // handle negative values
-      const scale = scaleOrSign !== '-' ? scaleOrSign : undefined;
-      const sign = scaleOrSign === '-' || maybeSign === '-' ? -1 : undefined;
+  return Object.entries(styles).reduce(
+    (acc: Record<string, any>, [key, val]) => {
+      if (typeof val === 'string' && val.indexOf('$') !== -1) {
+        // Handle theme tokens, eg. `color: "$primary"` or `color: "$colors$primary"`
+        const arr = val.split('$');
+        const token = arr.pop() ?? '';
+        const scaleOrSign = arr.pop();
+        const maybeSign = arr.pop(); // handle negative values
+        const scale = scaleOrSign !== '-' ? scaleOrSign : undefined;
+        const sign = scaleOrSign === '-' || maybeSign === '-' ? -1 : undefined;
 
-      if (scale && theme[scale]) {
-        acc[key] = theme[scale][token];
-      } else {
-        const themeKey = getThemeKey(theme, themeMap, key);
-        if (themeKey) {
-          acc[key] = theme[themeKey][token];
+        if (scale && theme[scale]) {
+          acc[key] = theme[scale][token];
+        } else {
+          const themeKey = getThemeKey(theme, themeMap, key);
+          if (themeKey) {
+            acc[key] = theme[themeKey][token];
+          }
         }
+        if (typeof acc[key] === 'number' && sign) {
+          acc[key] *= sign;
+        }
+      } else if (
+        val !== null &&
+        typeof val === 'object' &&
+        'value' in (val as object)
+      ) {
+        // Handle cases where the value comes from the `theme` returned by `createStitches`
+        acc[key] = (val as { value: unknown }).value;
+      } else {
+        // Value is a regular style value
+        acc[key] = val;
       }
-      if (typeof acc[key] === 'number' && sign) {
-        acc[key] *= sign;
-      }
-    } else if (typeof val === 'object' && val.value !== undefined) {
-      // Handle cases where the value comes from the `theme` returned by `createStitches`
-      acc[key] = val.value;
-    } else {
-      // Value is a regular style value
-      acc[key] = val;
-    }
 
-    return acc;
-  }, {});
+      return acc;
+    },
+    {}
+  );
 }
 
 export function createStyleSheet({
@@ -50,7 +64,13 @@ export function createStyleSheet({
   styles,
   variants,
   compoundVariants,
-}) {
+}: {
+  theme: Record<string, any>;
+  themeMap?: Record<string, string>;
+  styles: Record<string, any>;
+  variants: Record<string, Record<string, Record<string, any>>>;
+  compoundVariants: Array<Record<string, any>>;
+}): Record<string, any> {
   return StyleSheet.create({
     base: styles
       ? processStyles({
@@ -61,7 +81,7 @@ export function createStyleSheet({
       : {},
     // Variant styles
     ...Object.entries(variants).reduce(
-      (variantsAcc, [variantProp, variantValues]) => {
+      (variantsAcc: Record<string, any>, [variantProp, variantValues]) => {
         Object.entries(variantValues).forEach(
           ([variantName, variantStyles]) => {
             // Eg. `color_primary` or `size_small`
@@ -79,22 +99,28 @@ export function createStyleSheet({
       {}
     ),
     // Compound variant styles
-    ...compoundVariants.reduce((compoundAcc, compoundVariant) => {
-      const { css, ...compounds } = compoundVariant;
-      const compoundEntries = Object.entries(compounds);
+    ...compoundVariants.reduce(
+      (
+        compoundAcc: Record<string, any>,
+        compoundVariant: Record<string, any>
+      ) => {
+        const { css, ...compounds } = compoundVariant;
+        const compoundEntries = Object.entries(compounds) as [string, any][];
 
-      if (compoundEntries.length > 1) {
-        const key = getCompoundKey(compoundEntries);
+        if (compoundEntries.length > 1) {
+          const key = getCompoundKey(compoundEntries);
 
-        compoundAcc[key] = processStyles({
-          styles: css || {},
-          theme,
-          themeMap,
-        });
-      }
+          compoundAcc[key] = processStyles({
+            styles: css || {},
+            theme,
+            themeMap,
+          });
+        }
 
-      return compoundAcc;
-    }, {}),
+        return compoundAcc;
+      },
+      {}
+    ),
   });
 }
 
@@ -128,7 +154,7 @@ export function processStyleSheet(
   Object.entries(styleSheet).forEach(([sKey, sVal]) => {
     prosessedStyleSheet[sKey] = {};
 
-    const mediaStyles = {};
+    const mediaStyles: Record<string, any> = {};
 
     Object.entries(sVal).forEach(([vKey, vValue]) => {
       if (vKey in media) {
