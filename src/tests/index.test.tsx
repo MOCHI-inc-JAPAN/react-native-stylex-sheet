@@ -10,28 +10,12 @@ import {
 
 import { resolveMediaRangeQueries } from '../internals/media';
 import { createStyleSheet, processStyleSheet } from '../internals/styles';
-import { createStylex, StyleEntry, StyleInput } from '../internals';
+import {
+  createStylex,
+  defineVars,
+  defineConsts,
+} from '../internals';
 import { mockDimensions, reduceStyles } from './utils';
-
-// ---------------------------------------------------------------------------
-// Helpers used by tests that need useStylex()
-// ---------------------------------------------------------------------------
-
-type StylexInstance = ReturnType<typeof createStylex>;
-
-function makeComp(
-  stylex: StylexInstance,
-  entry: StyleEntry,
-  variantProps?: Record<string, any>
-) {
-  return function TestComp() {
-    const sx = stylex.useStylex();
-    const input: StyleInput = variantProps
-      ? sx.variants(entry, variantProps)
-      : entry;
-    return <View {...sx.props(input)} />;
-  };
-}
 
 // ---------------------------------------------------------------------------
 // Basic
@@ -49,7 +33,11 @@ describe('Basic', () => {
     });
 
     const { style } = stylex.props(styles.view);
-    expect(style[0]).toMatchObject({ backgroundColor: 'red', height: 100, width: 100 });
+    expect(style[0]).toMatchObject({
+      backgroundColor: 'red',
+      height: 100,
+      width: 100,
+    });
   });
 
   it('useStylex().props() renders base styles', () => {
@@ -58,32 +46,35 @@ describe('Basic', () => {
       view: { backgroundColor: 'red', height: 100, width: 100 },
     });
 
-    const Comp = makeComp(stylex, styles.view);
-    const { toJSON } = render(<Comp />);
-    const result = toJSON();
+    function Comp() {
+      const sx = stylex.useStylex();
+      return <View {...sx.props(styles.view)} />;
+    }
 
-    expect(result?.type).toEqual('View');
-    expect(result?.props.style[0]).toMatchObject({
+    const { toJSON } = render(<Comp />);
+    expect(toJSON()?.props.style[0]).toMatchObject({
       backgroundColor: 'red',
       height: 100,
       width: 100,
     });
   });
 
-  it('stylesheet is not recomputed when no runtime theme is used', () => {
-    const stylex = createStylex({
-      theme: { sizes: { demoWidth: 100 } },
-    });
+  it('stylesheet is not recomputed when no ThemeProvider is used', () => {
+    const vars = defineVars({ demoWidth: 100 });
+    const stylex = createStylex();
     const styles = stylex.create({
-      view: { backgroundColor: 'red', height: 100, width: '$demoWidth' },
+      view: { backgroundColor: 'red', height: 100, width: vars.demoWidth },
     });
 
-    // Render once to warm the cache
-    const Comp = makeComp(stylex, styles.view);
+    function Comp() {
+      const sx = stylex.useStylex();
+      return <View {...sx.props(styles.view)} />;
+    }
+
     render(<Comp />);
 
-    // Adding a new theme should NOT affect components not wrapped in ThemeProvider
-    stylex.createTheme({ sizes: { demoWidth: 10 } });
+    // Creating a new theme should NOT affect components not in ThemeProvider
+    stylex.createTheme(vars, { demoWidth: 10 });
 
     const { toJSON } = render(<Comp />);
     expect(toJSON()?.props.style[0]).toMatchObject({ width: 100 });
@@ -91,19 +82,33 @@ describe('Basic', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Runtime (ThemeProvider + useStylex)
+// Token resolution (defineVars + createTheme + ThemeProvider)
 // ---------------------------------------------------------------------------
 
-describe('Runtime', () => {
-  it('ThemeProvider switches the active theme', () => {
-    const stylex = createStylex({
-      theme: { sizes: { demoWidth: 100 } },
-    });
+describe('Token resolution', () => {
+  it('ThemeToken defaults are used without ThemeProvider', () => {
+    const vars = defineVars({ color: 'red', size: 100 });
+    const stylex = createStylex();
     const styles = stylex.create({
-      view: { backgroundColor: 'red', height: 100, width: '$demoWidth' },
+      view: { backgroundColor: vars.color, width: vars.size },
     });
-    const newTheme = stylex.createTheme({ sizes: { demoWidth: 30 } });
-    const Comp = makeComp(stylex, styles.view);
+
+    const { style } = stylex.props(styles.view);
+    expect(style[0]).toMatchObject({ backgroundColor: 'red', width: 100 });
+  });
+
+  it('ThemeProvider overrides token values', () => {
+    const vars = defineVars({ demoWidth: 100 });
+    const stylex = createStylex();
+    const styles = stylex.create({
+      view: { backgroundColor: 'red', height: 100, width: vars.demoWidth },
+    });
+    const newTheme = stylex.createTheme(vars, { demoWidth: 30 });
+
+    function Comp() {
+      const sx = stylex.useStylex();
+      return <View {...sx.props(styles.view)} />;
+    }
 
     const { toJSON } = render(
       <stylex.ThemeProvider theme={newTheme}>
@@ -114,120 +119,159 @@ describe('Runtime', () => {
     expect(toJSON()?.props.style[0]).toMatchObject({ width: 30 });
   });
 
-  it('ThemeProvider uses a newly created theme', () => {
-    const stylex = createStylex({
-      theme: { sizes: { demoWidth: 100 } },
-    });
+  it('multiple createTheme calls produce independent overrides', () => {
+    const vars = defineVars({ demoWidth: 100 });
+    const stylex = createStylex();
     const styles = stylex.create({
-      view: { backgroundColor: 'red', height: 100, width: '$demoWidth' },
+      view: { backgroundColor: 'red', height: 100, width: vars.demoWidth },
     });
-    const newTheme = stylex.createTheme({ sizes: { demoWidth: 10 } });
-    const Comp = makeComp(stylex, styles.view);
+    const themeA = stylex.createTheme(vars, { demoWidth: 10 });
+    const themeB = stylex.createTheme(vars, { demoWidth: 50 });
 
-    const { toJSON } = render(
-      <stylex.ThemeProvider theme={newTheme}>
+    function Comp() {
+      const sx = stylex.useStylex();
+      return <View {...sx.props(styles.view)} />;
+    }
+
+    const { toJSON: toJSONA } = render(
+      <stylex.ThemeProvider theme={themeA}>
         <Comp />
       </stylex.ThemeProvider>
     );
+    expect(toJSONA()?.props.style[0]).toMatchObject({ width: 10 });
 
-    expect(toJSON()?.props.style[0]).toMatchObject({ width: 10 });
-  });
-
-  it('ThemeProvider triggers recompute when runtime theme is added', () => {
-    const stylex = createStylex({
-      theme: { sizes: { demoWidth: 100 } },
-    });
-    const styles = stylex.create({
-      view: { backgroundColor: 'red', height: 100, width: '$demoWidth' },
-    });
-    const Comp = makeComp(stylex, styles.view);
-
-    // Render with default theme first (warms cache for theme-1)
-    render(<Comp />);
-
-    // Create new theme after first render
-    const newTheme = stylex.createTheme({ sizes: { demoWidth: 10 } });
-
-    const { toJSON } = render(
-      <stylex.ThemeProvider theme={newTheme}>
+    const { toJSON: toJSONB } = render(
+      <stylex.ThemeProvider theme={themeB}>
         <Comp />
       </stylex.ThemeProvider>
     );
-
-    expect(toJSON()?.props.style[0]).toMatchObject({ width: 10 });
+    expect(toJSONB()?.props.style[0]).toMatchObject({ width: 50 });
   });
 
-  it('variants() applies correct styles', () => {
-    const stylex = createStylex({
-      theme: {
-        colors: { primary: 'red', secondary: 'blue', tertiary: 'yellow' },
-        radii: { sm: 5, md: 10, lg: 15 },
-      },
-      media: {
-        md: '(width >= 750px)',
-        lg: '(width >= 1080px)',
-        xl: '(width >= 1284px)',
-        xxl: '(width >= 1536px)',
-      },
-    });
-
-    mockDimensions({ width: 1080 });
-
+  it('ThemeProvider triggers recompute when theme changes after first render', () => {
+    const vars = defineVars({ demoWidth: 100 });
+    const stylex = createStylex();
     const styles = stylex.create({
-      view: {
-        height: 100,
-        width: 100,
-        variants: {
-          v1: {
-            one: {
-              backgroundColor: '$primary',
-              '@lg': { backgroundColor: 'black' },
-            },
-            two: { backgroundColor: '$secondary' },
-            three: { backgroundColor: '$tertiary' },
-          },
-          v2: {
-            one: { borderColor: '$primary' },
-            two: { borderColor: '$secondary' },
-            three: { borderColor: '$tertiary' },
-          },
-        },
-        compoundVariants: [
-          {
-            v1: 'one',
-            v2: 'two',
-            css: {
-              borderRadius: '$sm',
-              borderWidth: 1,
-              '@md': { color: 'red' },
-            },
-          },
-          {
-            v1: 'two',
-            v2: 'three',
-            css: { borderRadius: '$lg', borderWidth: 2 },
-          },
-        ],
-        defaultVariants: { v1: 'one', v2: 'one' },
-      },
+      view: { backgroundColor: 'red', height: 100, width: vars.demoWidth },
     });
 
     function Comp() {
       const sx = stylex.useStylex();
-      return (
-        <View {...sx.props(sx.variants(styles.view, { v1: 'one', v2: 'two' }))} />
-      );
+      return <View {...sx.props(styles.view)} />;
     }
 
-    const { toJSON } = render(<Comp />);
-    expect(reduceStyles(toJSON()?.props.style)).toMatchObject({
+    render(<Comp />);
+
+    const newTheme = stylex.createTheme(vars, { demoWidth: 10 });
+
+    const { toJSON } = render(
+      <stylex.ThemeProvider theme={newTheme}>
+        <Comp />
+      </stylex.ThemeProvider>
+    );
+
+    expect(toJSON()?.props.style[0]).toMatchObject({ width: 10 });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// defineConsts
+// ---------------------------------------------------------------------------
+
+describe('defineConsts', () => {
+  it('returns a frozen object with the given values', () => {
+    const consts = defineConsts({ maxWidth: 1200, spacing: 8, label: 'hello' });
+    expect(consts.maxWidth).toBe(1200);
+    expect(consts.spacing).toBe(8);
+    expect(consts.label).toBe('hello');
+    expect(Object.isFrozen(consts)).toBe(true);
+  });
+
+  it('constant values can be used directly in styles', () => {
+    const consts = defineConsts({ buttonHeight: 48 });
+    const stylex = createStylex();
+    const styles = stylex.create({
+      button: { height: consts.buttonHeight },
+    });
+
+    const { style } = stylex.props(styles.button);
+    expect(style[0]).toMatchObject({ height: 48 });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Variadic props (StyleX variants recipe)
+// ---------------------------------------------------------------------------
+
+describe('Variadic props', () => {
+  it('props() accepts multiple StyleEntry args', () => {
+    const stylex = createStylex();
+    const styles = stylex.create({
+      base: { height: 100, width: 100 },
+      highlighted: { backgroundColor: 'yellow' },
+    });
+
+    const { style } = stylex.props(styles.base, styles.highlighted);
+    expect(reduceStyles(style)).toMatchObject({
       height: 100,
       width: 100,
-      backgroundColor: 'black',
-      borderColor: 'blue',
-      borderRadius: 5,
-      borderWidth: 1,
+      backgroundColor: 'yellow',
     });
+  });
+
+  it('props() skips falsy items', () => {
+    const stylex = createStylex();
+    const styles = stylex.create({
+      base: { height: 100 },
+      extra: { height: 200 },
+    });
+
+    const { style } = stylex.props(styles.base, false, null, undefined);
+    expect(reduceStyles(style)).toMatchObject({ height: 100 });
+  });
+
+  it('useStylex().props() handles multiple entries with tokens', () => {
+    const vars = defineVars({ primary: 'red' });
+    const stylex = createStylex();
+    const styles = stylex.create({
+      base: { height: 100, width: 100 },
+      colored: { backgroundColor: vars.primary },
+    });
+    const darkTheme = stylex.createTheme(vars, { primary: 'navy' });
+
+    function Comp() {
+      const sx = stylex.useStylex();
+      return <View {...sx.props(styles.base, styles.colored)} />;
+    }
+
+    const { toJSON } = render(
+      <stylex.ThemeProvider theme={darkTheme}>
+        <Comp />
+      </stylex.ThemeProvider>
+    );
+    expect(reduceStyles(toJSON()?.props.style)).toMatchObject({
+      height: 100,
+      backgroundColor: 'navy',
+    });
+  });
+
+  it('defaultVariants are applied automatically', () => {
+    const stylex = createStylex();
+    const styles = stylex.create({
+      button: {
+        height: 40,
+        variants: {
+          size: {
+            sm: { height: 32 },
+            lg: { height: 56 },
+          },
+        },
+        defaultVariants: { size: 'lg' },
+      },
+    });
+
+    const { style } = stylex.props(styles.button);
+    expect(reduceStyles(style)).toMatchObject({ height: 56 });
   });
 });
 
@@ -236,7 +280,7 @@ describe('Runtime', () => {
 // ---------------------------------------------------------------------------
 
 describe('Media', () => {
-  it('Nested utils and media queries with theme values', () => {
+  it('Nested utils and media queries', () => {
     const stylex = createStylex({
       media: {
         md: '(width >= 750px)',
@@ -302,7 +346,7 @@ describe('Media', () => {
     });
   });
 
-  it('Responsive variant props', () => {
+  it('Conditional styles simulate responsive variants', () => {
     mockDimensions({ width: 1080 });
 
     const stylex = createStylex({
@@ -310,32 +354,27 @@ describe('Media', () => {
     });
 
     const styles = stylex.create({
-      text: {
-        variants: {
-          color: {
-            primary: { color: 'red' },
-            secondary: { color: 'blue' },
-          },
-        },
-      },
+      primary: { color: 'red' },
+      secondary: { color: 'blue' },
     });
 
-    function Comp() {
+    function Comp({ useLg }: { useLg: boolean }) {
       const sx = stylex.useStylex();
       return (
         <View
           {...sx.props(
-            sx.variants(styles.text, {
-              color: { '@initial': 'primary', '@lg': 'secondary' },
-            })
+            !useLg && styles.primary,
+            useLg && styles.secondary
           )}
         />
       );
     }
 
-    const { toJSON } = render(<Comp />);
-    // @lg is active at width 1080
+    const { toJSON } = render(<Comp useLg={true} />);
     expect(reduceStyles(toJSON()?.props.style)).toMatchObject({ color: 'blue' });
+
+    const { toJSON: toJSON2 } = render(<Comp useLg={false} />);
+    expect(reduceStyles(toJSON2()?.props.style)).toMatchObject({ color: 'red' });
   });
 });
 
@@ -345,12 +384,12 @@ describe('Media', () => {
 
 describe('Utils', () => {
   const utils = {
-    util1: (value) => ({
+    util1: (value: number) => ({
       fontSize: value,
       '@bp1': { fontSize: value / 2 },
       '@bp2': { fontSize: value * 2 },
     }),
-    util2: (value) => ({
+    util2: (value: number) => ({
       util1: 20,
       width: value,
       height: value,
@@ -421,45 +460,70 @@ describe('Utils', () => {
       tablet: false,
     };
 
-    expect(resolveMediaRangeQueries(media, 640)).toMatchObject(['bp1', 'bp3', 'phone']);
+    expect(resolveMediaRangeQueries(media, 640)).toMatchObject([
+      'bp1',
+      'bp3',
+      'phone',
+    ]);
 
     media.phone = false;
     media.tablet = true;
-    expect(resolveMediaRangeQueries(media, 1024)).toMatchObject(['bp1', 'bp2', 'bp3', 'tablet']);
+    expect(resolveMediaRangeQueries(media, 1024)).toMatchObject([
+      'bp1',
+      'bp2',
+      'bp3',
+      'tablet',
+    ]);
     expect(resolveMediaRangeQueries({}, 640)).toMatchObject([]);
-    expect(resolveMediaRangeQueries({ bp1: false, bp2: false, bp3: true }, 640)).toMatchObject(['bp3']);
+    expect(
+      resolveMediaRangeQueries({ bp1: false, bp2: false, bp3: true }, 640)
+    ).toMatchObject(['bp3']);
   });
 
-  it('createStyleSheet', () => {
-    const theme = {
-      colors: { primary: 'red', secondary: 'blue', tertiary: 'yellow' },
-      radii: { sm: 5, md: 10, lg: 15 },
-    };
+  it('createStyleSheet with token values', () => {
+    const vars = defineVars({
+      primary: 'red',
+      secondary: 'blue',
+      tertiary: 'yellow',
+      sm: 5,
+      lg: 15,
+    });
+
+    const tokenValues = Object.fromEntries(
+      (Object.values(vars) as any[]).map((t) => [t.__varId, t.__default])
+    ) as Record<string, string | number>;
 
     const result = createStyleSheet({
-      theme,
-      themeMap: undefined,
+      tokenValues,
       styles: { height: 100, width: 100, sm: { height: 50, width: 50 } },
       variants: {
         v1: {
           one: {
-            backgroundColor: '$primary',
+            backgroundColor: vars.primary,
             sm: { backgroundColor: 'white' },
             md: { backgroundColor: 'black' },
             lg: { backgroundColor: 'pink' },
           },
-          two: { backgroundColor: '$secondary' },
-          three: { backgroundColor: '$tertiary' },
+          two: { backgroundColor: vars.secondary },
+          three: { backgroundColor: vars.tertiary },
         },
         v2: {
-          one: { borderColor: '$primary' },
-          two: { borderColor: '$secondary' },
-          three: { borderColor: '$tertiary' },
+          one: { borderColor: vars.primary },
+          two: { borderColor: vars.secondary },
+          three: { borderColor: vars.tertiary },
         },
       },
       compoundVariants: [
-        { v1: 'one', v2: 'three', css: { borderRadius: '$sm', borderWidth: 1 } },
-        { v1: 'two', v2: 'four', css: { borderRadius: '$lg', borderWidth: 2 } },
+        {
+          v1: 'one',
+          v2: 'three',
+          css: { borderRadius: vars.sm, borderWidth: 1 },
+        },
+        {
+          v1: 'two',
+          v2: 'four',
+          css: { borderRadius: vars.lg, borderWidth: 2 },
+        },
       ],
     });
 

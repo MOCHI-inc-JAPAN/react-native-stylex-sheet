@@ -115,31 +115,3 @@ export const DEFAULT_THEME_MAP = {
   ...SPACE_PROPERTIES,
   ...Z_INDEX_PROPERTIES,
 };
-
-export const THEME_VALUES = {
-  borderStyles: null,
-  borderWidths: null,
-  colors: null,
-  fonts: null,
-  fontSizes: null,
-  fontWeights: null,
-  letterSpacings: null,
-  lineHeights: null,
-  radii: null,
-  sizes: null,
-  space: null,
-  zIndices: null,
-};
-
-export const EMPTY_THEME = {
-  definition: {
-    __ID__: 'theme-0',
-    ...THEME_VALUES,
-  },
-  values: {
-    ...THEME_VALUES,
-  },
-};
-
-export const THEME_PROVIDER_MISSING_MESSAGE =
-  'Your app should have a ThemeProvider in order to access the theme';

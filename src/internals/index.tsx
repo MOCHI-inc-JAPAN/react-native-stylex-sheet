@@ -9,20 +9,18 @@ import {
 } from './utils';
 
 import {
-  DEFAULT_THEME_MAP,
-  EMPTY_THEME,
-  THEME_PROVIDER_MISSING_MESSAGE,
-} from './constants';
+  ThemeOverride,
+  defineVars,
+  defineConsts,
+  createTheme,
+} from './tokens';
 
 import { createStyleSheet, processStyleSheet } from './styles';
-import { processTheme } from './theme';
 import { resolveMediaRangeQueries } from './media';
-import type { ConfigType, DefaultThemeMap } from '../types/config';
+import type { ConfigType } from '../types/config';
 
-type StoredTheme = {
-  definition: Record<string, any>;
-  values: Record<string, Record<string, any> | null>;
-};
+export type { ThemeToken, VarsGroup, ThemeOverride } from './tokens';
+export { defineVars, defineConsts, createTheme };
 
 export type StyleEntry = {
   _raw: {
@@ -34,26 +32,16 @@ export type StyleEntry = {
   _sheets: Record<string, Record<string, any>>;
 };
 
-export type VariantSpec = {
-  _isVariantSpec: true;
-  _entry: StyleEntry;
-  _variantProps: Record<string, any>;
-};
+type StyleItem = StyleEntry | null | false | undefined;
 
-export type StyleInput = StyleEntry | VariantSpec;
-
-function isVariantSpec(input: StyleInput): input is VariantSpec {
-  return (
-    '_isVariantSpec' in input && (input as VariantSpec)._isVariantSpec === true
-  );
-}
+const EMPTY_TOKEN_VALUES: Record<string, string | number> = {};
 
 function resolveVariantStylesList(
   variantProps: Record<string, any>,
   variants: Record<string, Record<string, any>>,
   defaultVariants: Record<string, string>,
   media: Record<string, any>,
-  styleSheet: Record<string, any>,
+  sheet: Record<string, any>,
   activeMediaQueries: string[]
 ): object[] {
   if (!variants || Object.keys(variants).length === 0) return [];
@@ -70,19 +58,19 @@ function resolveVariantStylesList(
       ) {
         let combined: Record<string, any> = {};
         const initial = propValue['@initial'];
-        if (initial !== undefined && styleSheet[`${prop}_${initial}`]) {
-          combined = { ...combined, ...styleSheet[`${prop}_${initial}`] };
+        if (initial !== undefined && sheet[`${prop}_${initial}`]) {
+          combined = { ...combined, ...sheet[`${prop}_${initial}`] };
         }
         activeMediaQueries.forEach((mediaKey) => {
           const value = propValue[`@${mediaKey}`];
-          if (value !== undefined && styleSheet[`${prop}_${value}`]) {
-            combined = { ...combined, ...styleSheet[`${prop}_${value}`] };
+          if (value !== undefined && sheet[`${prop}_${value}`]) {
+            combined = { ...combined, ...sheet[`${prop}_${value}`] };
           }
         });
         return Object.keys(combined).length > 0 ? combined : undefined;
       }
 
-      return styleSheet[`${prop}_${propValue}`];
+      return sheet[`${prop}_${propValue}`];
     })
     .filter(Boolean) as object[];
 }
@@ -91,93 +79,43 @@ function resolveCompoundVariantStylesList(
   variantProps: Record<string, any>,
   defaultVariants: Record<string, string>,
   compoundVariants: any[],
-  styleSheet: Record<string, any>
+  sheet: Record<string, any>
 ): object[] {
   if (!compoundVariants || compoundVariants.length === 0) return [];
 
   return compoundVariants
     .map(({ css: _css, ...compounds }) => {
-      const compoundEntries = Object.entries(compounds) as [string, any][];
-      const allMatch = compoundEntries.every(([prop, value]) => {
-        return (variantProps[prop] ?? defaultVariants[prop]) === value;
-      });
-      if (allMatch) return styleSheet[getCompoundKey(compoundEntries)];
+      const entries = Object.entries(compounds) as [string, any][];
+      const allMatch = entries.every(
+        ([prop, value]) => (variantProps[prop] ?? defaultVariants[prop]) === value
+      );
+      if (allMatch) return sheet[getCompoundKey(entries)];
     })
     .filter(Boolean) as object[];
 }
 
 export function createStylex<
   Media extends {} = {},
-  Theme extends {} = {},
-  ThemeMap extends {} = DefaultThemeMap,
   Utils extends {} = {}
 >(
   config: {
     media?: ConfigType.Media<Media>;
-    theme?: ConfigType.Theme<Theme>;
-    themeMap?: ConfigType.ThemeMap<ThemeMap>;
     utils?: ConfigType.Utils<Utils>;
   } = {}
 ) {
-  const themes: StoredTheme[] = [];
   const media = (config.media || {}) as Record<string, string | boolean>;
   const utils = (config.utils || {}) as Record<string, (v: any) => any>;
 
-  if (config.theme) {
-    const processedTheme = processTheme(config.theme);
-    processedTheme.definition.__ID__ = 'theme-1';
-    themes.push(processedTheme);
-  } else {
-    themes.push(EMPTY_THEME);
-  }
-
-  const defaultThemeDefinition = themes[0].definition;
-  const ThemeContext = createContext(defaultThemeDefinition);
-
-  function createTheme(theme: any) {
-    const newTheme = processTheme(
-      Object.entries((config.theme as Record<string, any>) || {}).reduce(
-        (acc, [key, val]) => {
-          acc[key] = { ...(val as any), ...(theme[key] || {}) };
-          return acc;
-        },
-        {} as Record<string, any>
-      )
-    );
-    newTheme.definition.__ID__ = `theme-${themes.length + 1}`;
-    themes.push(newTheme);
-    return newTheme.definition;
-  }
+  const ThemeContext = createContext<ThemeOverride | null>(null);
 
   function ThemeProvider({
-    theme = defaultThemeDefinition,
+    theme = null,
     children,
   }: {
-    theme?: any;
+    theme?: ThemeOverride | null;
     children: React.ReactNode;
   }) {
-    return React.createElement(
-      ThemeContext.Provider,
-      { value: theme },
-      children
-    );
-  }
-
-  function useThemeInternal(): StoredTheme {
-    const themeDefinition = useContext(ThemeContext);
-    if (!themeDefinition) throw new Error(THEME_PROVIDER_MISSING_MESSAGE);
-    const found = themes.find(
-      (t) => t.definition.__ID__ === themeDefinition.__ID__
-    );
-    if (!found) throw new Error(THEME_PROVIDER_MISSING_MESSAGE);
-    return found;
-  }
-
-  function useTheme() {
-    const themeDefinition = useContext(ThemeContext);
-    if (!themeDefinition) throw new Error(THEME_PROVIDER_MISSING_MESSAGE);
-    return themes.find((t) => t.definition.__ID__ === themeDefinition.__ID__)
-      ?.values;
+    return React.createElement(ThemeContext.Provider, { value: theme }, children);
   }
 
   function create<T extends Record<string, Record<string, any>>>(
@@ -210,77 +148,69 @@ export function createStylex<
     return result as { [K in keyof T]: StyleEntry };
   }
 
-  function variants(
+  function resolveEntry(
     entry: StyleEntry,
-    variantProps: Record<string, any>
-  ): VariantSpec {
-    return {
-      _isVariantSpec: true,
-      _entry: entry,
-      _variantProps: variantProps,
-    };
-  }
-
-  function resolveProps(
-    input: StyleInput,
-    theme: StoredTheme,
+    tokenValues: Record<string, string | number>,
+    themeKey: string,
     activeMediaQueries: string[]
-  ): { style: any } {
-    const entry = isVariantSpec(input) ? input._entry : input;
-    const variantProps = isVariantSpec(input) ? input._variantProps : {};
-    const themeId = theme.definition.__ID__;
-
-    if (!entry._sheets[themeId]) {
-      entry._sheets[themeId] = createStyleSheet({
+  ): object[] {
+    if (!entry._sheets[themeKey]) {
+      entry._sheets[themeKey] = createStyleSheet({
+        tokenValues,
         styles: entry._raw.styles,
         variants: entry._raw.variants,
         compoundVariants: entry._raw.compoundVariants,
-        theme: (theme.values as Record<string, object>) || {},
-        themeMap: config.themeMap,
       });
     }
 
     const sheet = processStyleSheet(
-      entry._sheets[themeId],
+      entry._sheets[themeKey],
       media,
       activeMediaQueries
     );
 
-    const variantStylesList = resolveVariantStylesList(
-      variantProps,
+    const variantStyles = resolveVariantStylesList(
+      {},
       entry._raw.variants,
       entry._raw.defaultVariants,
       media,
       sheet,
       activeMediaQueries
     );
-    const compoundStylesList = resolveCompoundVariantStylesList(
-      variantProps,
+
+    const compoundStyles = resolveCompoundVariantStylesList(
+      {},
       entry._raw.defaultVariants,
       entry._raw.compoundVariants,
       sheet
     );
 
-    const styles = [
-      sheet.base,
-      ...variantStylesList,
-      ...compoundStylesList,
-    ].filter(Boolean);
-
-    return { style: styles };
+    return [sheet.base, ...variantStyles, ...compoundStyles].filter(Boolean);
   }
 
-  // Static props — uses default theme, reads dimensions synchronously (non-reactive)
-  function props(input: StyleInput): { style: any } {
+  function resolveAll(
+    styles: StyleItem[],
+    tokenValues: Record<string, string | number>,
+    themeKey: string,
+    activeMediaQueries: string[]
+  ): { style: object[] } {
+    const result: object[] = [];
+    for (const item of styles) {
+      if (!item) continue;
+      result.push(...resolveEntry(item, tokenValues, themeKey, activeMediaQueries));
+    }
+    return { style: result };
+  }
+
+  function props(...styles: StyleItem[]): { style: object[] } {
     const { width } = Dimensions.get('window');
     const correctedWidth = PixelRatio.getPixelSizeForLayoutSize(width);
     const activeMediaQueries = resolveMediaRangeQueries(media, correctedWidth);
-    return resolveProps(input, themes[0], activeMediaQueries);
+    return resolveAll(styles, EMPTY_TOKEN_VALUES, 'default', activeMediaQueries);
   }
 
-  // Hook returning theme-reactive and media-reactive {props, variants}
   function useStylex() {
-    const theme = useThemeInternal();
+    const override = useContext(ThemeContext);
     const { width } = useWindowDimensions();
 
     const activeMediaQueries = useMemo(
@@ -291,26 +221,26 @@ export function createStylex<
       [width] // eslint-disable-line react-hooks/exhaustive-deps
     );
 
+    const themeKey = override ? override.__themeId : 'default';
+    const tokenValues = override ? override.__tokenValues : EMPTY_TOKEN_VALUES;
+
     return useMemo(
       () => ({
-        props: (input: StyleInput) =>
-          resolveProps(input, theme, activeMediaQueries),
-        variants,
+        props: (...styles: StyleItem[]) =>
+          resolveAll(styles, tokenValues, themeKey, activeMediaQueries),
       }),
-      [theme, activeMediaQueries] // eslint-disable-line react-hooks/exhaustive-deps
+      [themeKey, activeMediaQueries] // eslint-disable-line react-hooks/exhaustive-deps
     );
   }
 
   return {
     create,
     props,
-    variants,
     useStylex,
-    theme: themes[0].definition,
+    defineVars,
+    defineConsts,
     createTheme,
     ThemeProvider,
-    useTheme,
-    config,
     media: config.media,
     utils: config.utils,
   };
@@ -318,7 +248,4 @@ export function createStylex<
 
 export default createStylex;
 
-// Convenience exports from a default (no-config) instance
-export const { create, props, variants, useStylex } = createStylex();
-
-export const defaultThemeMap = DEFAULT_THEME_MAP;
+export const { create, props, useStylex } = createStylex();

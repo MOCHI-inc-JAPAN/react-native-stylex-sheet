@@ -1,123 +1,60 @@
 import { StyleSheet } from 'react-native';
-import { DEFAULT_THEME_MAP } from './constants';
-import { getThemeKey, processThemeMap } from './theme';
+import { isThemeToken } from './tokens';
 import { getCompoundKey } from './utils';
 
-/**
- * Process styles by replacing all theme tokens with their actual value.
- * NOTE: passed styles need to be flattened before calling this!
- */
-export function processStyles({
-  styles,
-  theme,
-  themeMap: customThemeMap,
-}: {
-  styles: Record<string, any>;
-  theme: Record<string, any>;
-  themeMap?: Record<string, string>;
-}): Record<string, any> {
-  const themeMap = processThemeMap(customThemeMap || DEFAULT_THEME_MAP);
-
-  return Object.entries(styles).reduce(
-    (acc: Record<string, any>, [key, val]) => {
-      if (typeof val === 'string' && val.indexOf('$') !== -1) {
-        // Handle theme tokens, eg. `color: "$primary"` or `color: "$colors$primary"`
-        const arr = val.split('$');
-        const token = arr.pop() ?? '';
-        const scaleOrSign = arr.pop();
-        const maybeSign = arr.pop(); // handle negative values
-        const scale = scaleOrSign !== '-' ? scaleOrSign : undefined;
-        const sign = scaleOrSign === '-' || maybeSign === '-' ? -1 : undefined;
-
-        if (scale && theme[scale]) {
-          acc[key] = theme[scale][token];
-        } else {
-          const themeKey = getThemeKey(theme, themeMap, key);
-          if (themeKey) {
-            acc[key] = theme[themeKey][token];
-          }
-        }
-        if (typeof acc[key] === 'number' && sign) {
-          acc[key] *= sign;
-        }
-      } else if (
-        val !== null &&
-        typeof val === 'object' &&
-        'value' in (val as object)
-      ) {
-        // Handle cases where the value comes from the `theme` returned by `createStitches`
-        acc[key] = (val as { value: unknown }).value;
-      } else {
-        // Value is a regular style value
-        acc[key] = val;
-      }
-
-      return acc;
-    },
-    {}
-  );
+export function resolveTokensDeep(
+  styles: Record<string, any>,
+  tokenValues: Record<string, string | number>
+): Record<string, any> {
+  const out: Record<string, any> = {};
+  for (const [k, v] of Object.entries(styles)) {
+    if (isThemeToken(v)) {
+      out[k] = tokenValues[v.__varId] ?? v.__default;
+    } else if (v !== null && typeof v === 'object' && !Array.isArray(v)) {
+      out[k] = resolveTokensDeep(v as Record<string, any>, tokenValues);
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
 }
 
 export function createStyleSheet({
-  theme,
-  themeMap,
+  tokenValues,
   styles,
   variants,
   compoundVariants,
 }: {
-  theme: Record<string, any>;
-  themeMap?: Record<string, string>;
+  tokenValues: Record<string, string | number>;
   styles: Record<string, any>;
   variants: Record<string, Record<string, Record<string, any>>>;
   compoundVariants: Array<Record<string, any>>;
 }): Record<string, any> {
   return StyleSheet.create({
-    base: styles
-      ? processStyles({
-          styles,
-          theme,
-          themeMap,
-        })
-      : {},
-    // Variant styles
+    base: styles ? resolveTokensDeep(styles, tokenValues) : {},
     ...Object.entries(variants).reduce(
-      (variantsAcc: Record<string, any>, [variantProp, variantValues]) => {
-        Object.entries(variantValues).forEach(
-          ([variantName, variantStyles]) => {
-            // Eg. `color_primary` or `size_small`
-            const key = `${variantProp}_${variantName}`;
-
-            variantsAcc[key] = processStyles({
-              styles: variantStyles,
-              theme,
-              themeMap,
-            });
-          }
-        );
-        return variantsAcc;
+      (acc: Record<string, any>, [variantProp, variantValues]) => {
+        Object.entries(variantValues).forEach(([variantName, variantStyles]) => {
+          acc[`${variantProp}_${variantName}`] = resolveTokensDeep(
+            variantStyles,
+            tokenValues
+          );
+        });
+        return acc;
       },
       {}
     ),
-    // Compound variant styles
     ...compoundVariants.reduce(
-      (
-        compoundAcc: Record<string, any>,
-        compoundVariant: Record<string, any>
-      ) => {
-        const { css, ...compounds } = compoundVariant;
-        const compoundEntries = Object.entries(compounds) as [string, any][];
-
-        if (compoundEntries.length > 1) {
-          const key = getCompoundKey(compoundEntries);
-
-          compoundAcc[key] = processStyles({
-            styles: css || {},
-            theme,
-            themeMap,
-          });
+      (acc: Record<string, any>, cv: Record<string, any>) => {
+        const { css, ...compounds } = cv;
+        const entries = Object.entries(compounds) as [string, any][];
+        if (entries.length > 1) {
+          acc[getCompoundKey(entries)] = resolveTokensDeep(
+            css || {},
+            tokenValues
+          );
         }
-
-        return compoundAcc;
+        return acc;
       },
       {}
     ),
@@ -139,46 +76,39 @@ export function createStyleSheet({
  * prop_value: {
  *   color: 'blue'
  * }
- *
- * @param {Record<string, object>} styleSheet
- * @param {string[]} activeMediaQueries
- * @returns {Record<string, object>}
  */
 export function processStyleSheet(
   styleSheet: Record<string, any>,
   media: Record<string, any>,
   activeMediaQueries: string[]
 ): Record<string, any> {
-  const prosessedStyleSheet: Record<string, any> = {};
+  const processedStyleSheet: Record<string, any> = {};
 
   Object.entries(styleSheet).forEach(([sKey, sVal]) => {
-    prosessedStyleSheet[sKey] = {};
+    processedStyleSheet[sKey] = {};
 
     const mediaStyles: Record<string, any> = {};
 
     Object.entries(sVal).forEach(([vKey, vValue]) => {
       if (vKey in media) {
-        // Only apply media styles that are "active"
         if (activeMediaQueries.includes(vKey)) {
           mediaStyles[vKey] = vValue;
         }
       } else {
-        prosessedStyleSheet[sKey][vKey] = vValue;
+        processedStyleSheet[sKey][vKey] = vValue;
       }
     });
 
-    // Apply media styles in right order so that "specificity" is maintained
     activeMediaQueries.forEach((mediaKey) => {
       const style = mediaStyles[mediaKey];
-
       if (style) {
-        prosessedStyleSheet[sKey] = {
-          ...prosessedStyleSheet[sKey],
+        processedStyleSheet[sKey] = {
+          ...processedStyleSheet[sKey],
           ...style,
         };
       }
     });
   });
 
-  return prosessedStyleSheet;
+  return processedStyleSheet;
 }

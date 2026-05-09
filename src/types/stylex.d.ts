@@ -1,160 +1,119 @@
 /* eslint-disable */
 import type * as React from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
+import type { ThemeToken, VarsGroup, ThemeOverride } from './tokens';
 import type * as CSSUtil from './css-util';
-import type * as ThemeUtil from './theme';
 import type * as Util from './util';
 
-/** Opaque symbol carrying variant types on a StyleEntry. */
-declare const $$StyleEntryVariants: unique symbol;
-export type $$StyleEntryVariants = typeof $$StyleEntryVariants;
+export type { ThemeToken, VarsGroup, ThemeOverride };
 
-/**
- * Handle returned by `create()` for a single style definition.
- * Branded with `Variants` so that `variants()` can enforce correct prop types.
- */
-export interface StyleEntry<Variants extends {} = {}> {
-  readonly [$$StyleEntryVariants]: Variants;
-}
+/** A handle returned by create() for a single style definition. */
+export interface StyleEntry {}
 
-/** Handle returned by `variants()`. Pass to `props()` to apply variant styles. */
-export interface VariantSpec {
-  readonly _isVariantSpec: true;
-}
-
-/** Input accepted by `props()`. */
-export type StyleInput = StyleEntry<any> | VariantSpec;
+/** Input accepted by props() — falsy values are silently ignored. */
+export type StyleItem = StyleEntry | null | false | undefined;
 
 /** Variant prop values — supports responsive objects with @initial / @<mediaKey>. */
 type VariantValue<V, Media> =
   | V
   | ({ '@initial'?: V } & { [KMedia in Util.Prefixed<'@', keyof Media>]?: V });
 
-/** Props passed to `variants()` for a given variant definition. */
-type VariantPropsInput<
-  Variants extends Record<string, Record<string, any>>,
-  Media extends {}
-> = {
-  [K in keyof Variants]?: VariantValue<keyof Variants[K], Media>;
-};
+/** CSS style value: a raw primitive or a ThemeToken from defineVars(). */
+type TokenOrValue = string | number | boolean | ThemeToken;
 
-/** Extract the variants object from a style definition. */
-type ExtractVariants<T> = T extends {
-  variants: infer V extends Record<string, Record<string, any>>;
-}
-  ? V
-  : {};
-
-/** The StyleX-like API object returned by `createStylex()`. */
-export default interface Stylex<
+/** The StyleX-like API object returned by createStylex(). */
+export default interface StylexInterface<
   Media extends {} = {},
-  Theme extends {} = {},
-  ThemeMap extends {} = {},
   Utils extends {} = {}
 > {
-  config: {
-    media: Media;
-    theme: Theme;
-    themeMap: ThemeMap;
-    utils: Utils;
-  };
-
   /**
    * Define styles. Call at module level (outside components).
-   * Supports `variants`, `compoundVariants`, and `defaultVariants` per entry.
+   * Supports variants, compoundVariants, and defaultVariants per entry.
+   * Style values may be ThemeTokens from defineVars() for theme-reactive values.
    */
   create<
     Defs extends Record<
       string,
-      CSS & {
-        variants?: { [Name in string]: { [Pair in number | string]: CSS } };
-        compoundVariants?: (Record<string, string | number> & { css: CSS })[];
+      Record<string, any> & {
+        variants?: {
+          [Name in string]: { [Pair in number | string]: Record<string, any> };
+        };
+        compoundVariants?: (Record<string, string | number> & {
+          css: Record<string, any>;
+        })[];
         defaultVariants?: { [K in string]?: string };
       }
-    >,
-    CSS = CSSUtil.CSS<Media, Theme, ThemeMap, Utils>
+    >
   >(
     styleDefs: Defs
-  ): { [K in keyof Defs]: StyleEntry<ExtractVariants<Defs[K]>> };
+  ): { [K in keyof Defs]: StyleEntry };
 
   /**
-   * Wrap a StyleEntry with variant props to apply.
-   * Pass the result to `props()`.
+   * Resolve one or more StyleEntry objects into { style } props.
+   * Falsy items (null, false, undefined) are skipped.
+   * Uses default token values and reads device dimensions synchronously (non-reactive).
+   * For theme/media reactivity, use useStylex().props() instead.
    *
    * @example
-   * stylex.props(stylex.variants(styles.button, { size: 'large' }))
-   * stylex.props(stylex.variants(styles.button, { size: { '@initial': 'small', '@md': 'large' } }))
+   * <View {...stylex.props(styles.base, isHighlighted && styles.highlighted)} />
    */
-  variants<V extends Record<string, Record<string, any>>>(
-    entry: StyleEntry<V>,
-    variantProps: VariantPropsInput<V, Media>
-  ): VariantSpec;
+  props(...styles: StyleItem[]): { style: StyleProp<ViewStyle> };
 
   /**
-   * Resolve a StyleEntry (or VariantSpec) into `{ style }` props.
-   * Uses the default theme and reads device dimensions synchronously (non-reactive).
-   * For theme/media reactivity, use `useStylex().props()` instead.
-   */
-  props(input: StyleInput): { style: StyleProp<ViewStyle> };
-
-  /**
-   * React hook that returns a theme- and media-reactive `{ props, variants }`.
-   * Must be called inside a component. Uses ThemeProvider context for the active theme.
+   * React hook returning a media- and theme-reactive props function.
+   * Must be called inside a component. Uses ThemeProvider context for active theme.
    *
    * @example
-   * function MyComp() {
-   *   const stylex = useStylex();
-   *   return <View {...stylex.props(stylex.variants(styles.container, { color: 'primary' }))} />;
+   * function MyComp({ highlight }) {
+   *   const sx = useStylex();
+   *   return <View {...sx.props(styles.base, highlight && styles.highlighted)} />;
    * }
    */
   useStylex(): {
-    props(input: StyleInput): { style: StyleProp<ViewStyle> };
-    variants<V extends Record<string, Record<string, any>>>(
-      entry: StyleEntry<V>,
-      variantProps: VariantPropsInput<V, Media>
-    ): VariantSpec;
+    props(...styles: StyleItem[]): { style: StyleProp<ViewStyle> };
   };
 
-  /** The default theme definition object (for use with ThemeProvider). */
-  theme: string & {
-    [Scale in keyof Theme]: {
-      [Token in keyof Theme[Scale]]: ThemeUtil.Token<
-        Extract<Token, string | number>,
-        string,
-        Extract<Scale, string | void>
-      >;
-    };
-  };
+  /**
+   * Define a group of theme variables with default values.
+   * Returns ThemeToken objects that can be used as style values in create().
+   *
+   * @example
+   * const vars = stylex.defineVars({ primaryColor: 'blue', spacing: 8 });
+   * const styles = stylex.create({ box: { color: vars.primaryColor } });
+   */
+  defineVars<T extends Record<string, string | number>>(defaults: T): VarsGroup<T>;
 
-  /** Create an alternate theme. Pass the returned value to ThemeProvider. */
-  createTheme: {
-    <
-      Arg extends {
-        [Scale in keyof Theme]?: {
-          [Token in keyof Theme[Scale]]?: boolean | number | string;
-        };
-      }
-    >(
-      arg: Arg
-    ): string & Record<string, Record<string, any>>;
-  };
+  /**
+   * Define non-overridable constants. Returns a frozen copy.
+   *
+   * @example
+   * const consts = stylex.defineConsts({ maxWidth: 1200 });
+   */
+  defineConsts<T extends Record<string, string | number | boolean>>(
+    consts: T
+  ): Readonly<T>;
 
-  /** Provides the active theme to all descendant components using `useStylex()` or `useTheme()`. */
+  /**
+   * Create a theme override for a VarsGroup.
+   * Pass the result to ThemeProvider to apply the overrides.
+   *
+   * @example
+   * const darkTheme = stylex.createTheme(vars, { primaryColor: 'navy' });
+   * <ThemeProvider theme={darkTheme}><App /></ThemeProvider>
+   */
+  createTheme<T extends VarsGroup<Record<string, string | number>>>(
+    vars: T,
+    overrides: { [K in keyof T]: string | number }
+  ): ThemeOverride;
+
+  /**
+   * Provides a ThemeOverride to all descendant components using useStylex().
+   * If no theme is provided, token defaults are used.
+   */
   ThemeProvider: React.FunctionComponent<{
-    theme?: any;
+    theme?: ThemeOverride | null;
     children: React.ReactNode;
   }>;
-
-  /** Returns the resolved values of the current theme (from ThemeProvider context). */
-  useTheme(): {
-    [Scale in keyof Theme]: {
-      [Token in keyof Theme[Scale]]: Theme[Scale][Token] extends string
-        ? ThemeUtil.AliasedToken<Theme[Scale][Token]> extends never
-          ? string
-          : Theme[Scale][ThemeUtil.AliasedToken<Theme[Scale][Token]>]
-        : Theme[Scale][Token];
-    };
-  };
 
   media: Media;
   utils: Utils;

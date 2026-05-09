@@ -1,6 +1,6 @@
 {
   "exclude": ["node_modules", "example", "lib"],
-  "include": ["src/internals", "src/types"],
+  "include": ["src/internals", "src/types", "src/tests"],
   "compilerOptions": {
     "allowJs": true,
     "allowUnreachableCode": false,
@@ -25,7 +25,7 @@
     "sourceMap": true,
     "strict": true,
     "target": "esnext",
-    "types": ["node"],
+    "types": ["node", "jest"],
     "paths": {
       "stitches-native": ["./src/index"]
     }
