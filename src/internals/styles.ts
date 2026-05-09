@@ -118,8 +118,12 @@ export function createStyleSheet({
  * @param {string[]} activeMediaQueries
  * @returns {Record<string, object>}
  */
-export function processStyleSheet(styleSheet, media, activeMediaQueries) {
-  const prosessedStyleSheet = {};
+export function processStyleSheet(
+  styleSheet: Record<string, any>,
+  media: Record<string, any>,
+  activeMediaQueries: string[]
+): Record<string, any> {
+  const prosessedStyleSheet: Record<string, any> = {};
 
   Object.entries(styleSheet).forEach(([sKey, sVal]) => {
     prosessedStyleSheet[sKey] = {};

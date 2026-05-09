@@ -1,7 +1,9 @@
 import { THEME_VALUES } from './constants';
 
-export function processThemeMap(themeMap) {
-  const definition = {};
+export function processThemeMap(
+  themeMap: Record<string, string>
+): Record<string, Record<string, string>> {
+  const definition: Record<string, Record<string, string>> = {};
 
   Object.keys(themeMap).forEach((token) => {
     const scale = themeMap[token];
@@ -16,9 +18,12 @@ export function processThemeMap(themeMap) {
   return definition;
 }
 
-export function processTheme(theme) {
-  const definition = {};
-  const values = {};
+export function processTheme(theme: Record<string, Record<string, any>>): {
+  definition: Record<string, any>;
+  values: Record<string, Record<string, any>>;
+} {
+  const definition: Record<string, any> = {};
+  const values: Record<string, Record<string, any>> = {};
 
   Object.keys(theme).forEach((scale) => {
     if (!definition[scale]) definition[scale] = {};
@@ -45,7 +50,11 @@ export function processTheme(theme) {
   return { definition, values };
 }
 
-export function getThemeKey(theme, themeMap, key) {
+export function getThemeKey(
+  theme: Record<string, any>,
+  themeMap: Record<string, any>,
+  key: string
+): string | undefined {
   return Object.keys(THEME_VALUES).find((themeKey) => {
     return key in (themeMap[themeKey] || {}) && theme?.[themeKey];
   });

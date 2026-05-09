@@ -20,7 +20,7 @@ import { resolveMediaRangeQueries } from './media';
 import type { ConfigType, DefaultThemeMap } from '../types/config';
 
 type StoredTheme = {
-  definition: Record<string, any> & { __ID__: string };
+  definition: Record<string, any>;
   values: Record<string, Record<string, any> | null>;
 };
 
