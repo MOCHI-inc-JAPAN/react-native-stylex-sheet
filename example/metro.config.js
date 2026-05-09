@@ -1,14 +1,13 @@
 /* eslint-disable */
 const path = require('path');
-const { mapValues } = require('lodash');
 const { getDefaultConfig } = require('expo/metro-config');
 
 const packagesRelative = {
   'stitches-native': '../src/internals',
 };
 
-const packages = mapValues(packagesRelative, (relativePath) =>
-  path.resolve(relativePath),
+const packages = Object.fromEntries(
+  Object.entries(packagesRelative).map(([key, relativePath]) => [key, path.resolve(relativePath)])
 );
 
 function createMetroConfiguration(projectPath) {
