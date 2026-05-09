@@ -14,7 +14,8 @@
       "Bash(pnpm remove *)",
       "Bash(pnpm update *)",
       "Bash(pnpm add *)",
-      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('TypeScript version:', d['devDependencies']['typescript']\\)\")"
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('TypeScript version:', d['devDependencies']['typescript']\\)\")",
+      "Bash(pnpm ls *)"
     ]
   }
 }
