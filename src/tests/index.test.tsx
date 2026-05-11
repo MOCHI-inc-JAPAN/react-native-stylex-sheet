@@ -10,11 +10,7 @@ import {
 
 import { resolveMediaRangeQueries } from '../internals/media';
 import { createStyleSheet, processStyleSheet } from '../internals/styles';
-import {
-  createStylex,
-  defineVars,
-  defineConsts,
-} from '../internals';
+import { createStylex, defineVars, defineConsts } from '../internals';
 import { mockDimensions, reduceStyles } from './utils';
 
 // ---------------------------------------------------------------------------
@@ -362,19 +358,20 @@ describe('Media', () => {
       const sx = stylex.useStylex();
       return (
         <View
-          {...sx.props(
-            !useLg && styles.primary,
-            useLg && styles.secondary
-          )}
+          {...sx.props(!useLg && styles.primary, useLg && styles.secondary)}
         />
       );
     }
 
     const { toJSON } = render(<Comp useLg={true} />);
-    expect(reduceStyles(toJSON()?.props.style)).toMatchObject({ color: 'blue' });
+    expect(reduceStyles(toJSON()?.props.style)).toMatchObject({
+      color: 'blue',
+    });
 
     const { toJSON: toJSON2 } = render(<Comp useLg={false} />);
-    expect(reduceStyles(toJSON2()?.props.style)).toMatchObject({ color: 'red' });
+    expect(reduceStyles(toJSON2()?.props.style)).toMatchObject({
+      color: 'red',
+    });
   });
 });
 

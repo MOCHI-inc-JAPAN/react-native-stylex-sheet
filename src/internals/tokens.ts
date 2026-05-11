@@ -52,10 +52,7 @@ export function defineConsts<
 
 export function createTheme<
   T extends VarsGroup<Record<string, string | number>>
->(
-  vars: T,
-  overrides: { [K in keyof T]: string | number }
-): ThemeOverride {
+>(vars: T, overrides: { [K in keyof T]: string | number }): ThemeOverride {
   const themeId = nextId();
   const tokenValues: Record<string, string | number> = {};
   for (const [k, token] of Object.entries(vars)) {

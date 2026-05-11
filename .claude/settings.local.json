@@ -15,7 +15,13 @@
       "Bash(pnpm update *)",
       "Bash(pnpm add *)",
       "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('TypeScript version:', d['devDependencies']['typescript']\\)\")",
-      "Bash(pnpm ls *)"
+      "Bash(pnpm ls *)",
+      "Bash(asdf current *)",
+      "Bash(asdf list *)",
+      "Bash(asdf plugin *)",
+      "Bash(asdf global *)",
+      "Bash(asdf set *)",
+      "Bash(asdf uninstall *)"
     ]
   }
 }

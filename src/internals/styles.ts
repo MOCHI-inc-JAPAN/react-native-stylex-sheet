@@ -34,12 +34,14 @@ export function createStyleSheet({
     base: styles ? resolveTokensDeep(styles, tokenValues) : {},
     ...Object.entries(variants).reduce(
       (acc: Record<string, any>, [variantProp, variantValues]) => {
-        Object.entries(variantValues).forEach(([variantName, variantStyles]) => {
-          acc[`${variantProp}_${variantName}`] = resolveTokensDeep(
-            variantStyles,
-            tokenValues
-          );
-        });
+        Object.entries(variantValues).forEach(
+          ([variantName, variantStyles]) => {
+            acc[`${variantProp}_${variantName}`] = resolveTokensDeep(
+              variantStyles,
+              tokenValues
+            );
+          }
+        );
         return acc;
       },
       {}

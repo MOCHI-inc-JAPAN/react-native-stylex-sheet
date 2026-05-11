@@ -46,41 +46,6 @@ export function getCompoundKey(compoundEntries: [string, any][]): string {
  *
  * For example:
  *
- * createStitches({
- *   media: {
- *     bp1: '(min-width: 640px)',
- *     bp2: '(min-width: 1024px)',
- *   },
- *   utils: {
- *     util1: (value) => ({
- *       fontSize: value,
- *       '@bp1': {
- *          fontSize: value / 2,
- *       },
- *       '@bp2': {
- *          fontSize: value * 2,
- *       }
- *     }),
- *     util2: (value) => ({
- *       util1: 20, // <---- utils can use other utils!
- *       width: value,
- *       height: value,
- *       '@bp2': {
- *          width: value * 3,
- *          height: value * 3,
- *       }
- *     }),
- *   }
- * });
- *
- * const Example = styled('div', {
- *   color: 'red',
- *   util2: 100,
- *  '@bp1': {
- *     color: 'blue',
- *   }
- * }
- *
  * Result:
  * {
  *   color: 'red',
@@ -133,46 +98,6 @@ export function flattenStyles(
  *
  * For example:
  *
- * createStitches({
- *   media: {
- *     bp1: '(min-width: 640px)',
- *     bp2: '(min-width: 1024px)',
- *   },
- *   utils: {
- *     util1: (value) => ({
- *       fontSize: value,
- *       '@bp1': {
- *          fontSize: value / 2,
- *       },
- *       '@bp2': {
- *          fontSize: value * 2,
- *       }
- *     }),
- *     util2: (value) => ({
- *       util1: 20,
- *       width: value,
- *       height: value,
- *       '@bp2': {
- *          width: value * 3,
- *          height: value * 3,
- *       }
- *     }),
- *   }
- * });
- *
- * const Example = styled('div', {
- *   variants: {
- *     v1: {
- *       x: {
- *         util1: 20,
- *       },
- *       y: {
- *         util2: 200,
- *       },
- *     }
- *   }
- * }
- *
  * Result:
  * variants: {
  *   v1: {
@@ -224,33 +149,6 @@ export function flattenVariantStyles(
  * Flatten the styles inside compound variant definitions so that utils and media styles are recusively merged.
  *
  * For example:
- *
- * createStitches({
- *   media: {
- *     bp1: '(min-width: 640px)',
- *     bp2: '(min-width: 1024px)',
- *   },
- *   utils: {
- *     util1: (value) => ({
- *       fontSize: value,
- *       '@bp1': {
- *          fontSize: value / 2,
- *       },
- *       '@bp2': {
- *          fontSize: value * 2,
- *       }
- *     }),
- *     util2: (value) => ({
- *       util1: 20,
- *       width: value,
- *       height: value,
- *       '@bp2': {
- *          width: value * 3,
- *          height: value * 3,
- *       },
- *     }),
- *   },
- * });
  *
  * compoundVariants: [{
  *   v1: 'x',

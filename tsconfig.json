@@ -1,6 +1,6 @@
 {
   "exclude": ["node_modules", "example", "lib"],
-  "include": ["src/internals", "src/types", "src/tests"],
+  "include": ["src/internals", "src/tests"],
   "compilerOptions": {
     "allowJs": true,
     "allowUnreachableCode": false,
@@ -25,9 +25,6 @@
     "sourceMap": true,
     "strict": true,
     "target": "esnext",
-    "types": ["node", "jest"],
-    "paths": {
-      "@mochi-inc-japan/react-native-stylex-sheet": ["./src/types/index.d.ts"]
-    }
+    "types": ["node", "jest"]
   }
 }

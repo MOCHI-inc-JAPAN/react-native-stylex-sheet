@@ -8,38 +8,41 @@ import {
   getCompoundKey,
 } from './utils';
 
-import {
-  ThemeOverride,
-  defineVars,
-  defineConsts,
-  createTheme,
-} from './tokens';
+import { ThemeOverride, createTheme, defineConsts, defineVars } from './tokens';
 
-import { createStyleSheet, processStyleSheet } from './styles';
+import type {
+  RNStyle,
+  StyleEntryDef,
+  MediaConfig,
+  UtilsConfig,
+} from './style-types';
 import { resolveMediaRangeQueries } from './media';
-import type { ConfigType } from '../types/config';
+import { createStyleSheet, processStyleSheet } from './styles';
 
-export type { ThemeToken, VarsGroup, ThemeOverride } from './tokens';
-export { defineVars, defineConsts, createTheme };
+export type { ThemeOverride, ThemeToken, VarsGroup } from './tokens';
+export { createTheme, defineConsts, defineVars };
 
 export type StyleEntry = {
   _raw: {
-    styles: Record<string, any>;
-    variants: Record<string, Record<string, Record<string, any>>>;
-    compoundVariants: any[];
-    defaultVariants: Record<string, string>;
+    styles: RNStyle;
+    variants: Record<string, Record<string | number, RNStyle>>;
+    compoundVariants: Array<{
+      css: RNStyle;
+      [variantKey: string]: string | number | RNStyle;
+    }>;
+    defaultVariants: Record<string, string | number>;
   };
-  _sheets: Record<string, Record<string, any>>;
+  _sheets: Record<string, Record<string, RNStyle>>;
 };
 
-type StyleItem = StyleEntry | null | false | undefined;
+export type StyleItem = StyleEntry | null | false | undefined;
 
 const EMPTY_TOKEN_VALUES: Record<string, string | number> = {};
 
 function resolveVariantStylesList(
   variantProps: Record<string, any>,
   variants: Record<string, Record<string, any>>,
-  defaultVariants: Record<string, string>,
+  defaultVariants: Record<string, string | number>,
   media: Record<string, any>,
   sheet: Record<string, any>,
   activeMediaQueries: string[]
@@ -77,7 +80,7 @@ function resolveVariantStylesList(
 
 function resolveCompoundVariantStylesList(
   variantProps: Record<string, any>,
-  defaultVariants: Record<string, string>,
+  defaultVariants: Record<string, string | number>,
   compoundVariants: any[],
   sheet: Record<string, any>
 ): object[] {
@@ -87,7 +90,8 @@ function resolveCompoundVariantStylesList(
     .map(({ css: _css, ...compounds }) => {
       const entries = Object.entries(compounds) as [string, any][];
       const allMatch = entries.every(
-        ([prop, value]) => (variantProps[prop] ?? defaultVariants[prop]) === value
+        ([prop, value]) =>
+          (variantProps[prop] ?? defaultVariants[prop]) === value
       );
       if (allMatch) return sheet[getCompoundKey(entries)];
     })
@@ -95,12 +99,12 @@ function resolveCompoundVariantStylesList(
 }
 
 export function createStylex<
-  Media extends {} = {},
-  Utils extends {} = {}
+  Media extends object = object,
+  Utils extends object = object
 >(
   config: {
-    media?: ConfigType.Media<Media>;
-    utils?: ConfigType.Utils<Utils>;
+    media?: MediaConfig<Media>;
+    utils?: UtilsConfig<Utils>;
   } = {}
 ) {
   const media = (config.media || {}) as Record<string, string | boolean>;
@@ -115,15 +119,21 @@ export function createStylex<
     theme?: ThemeOverride | null;
     children: React.ReactNode;
   }) {
-    return React.createElement(ThemeContext.Provider, { value: theme }, children);
+    return React.createElement(
+      ThemeContext.Provider,
+      { value: theme },
+      children
+    );
   }
 
-  function create<T extends Record<string, Record<string, any>>>(
-    styleDefs: T
-  ): { [K in keyof T]: StyleEntry } {
+  function create<Defs extends Record<string, StyleEntryDef<Media, Utils>>>(
+    styleDefs: Defs
+  ): { [K in keyof Defs]: StyleEntry } {
     const result: Record<string, StyleEntry> = {};
 
-    for (const [key, def] of Object.entries(styleDefs)) {
+    for (const [key, def] of Object.entries(
+      styleDefs as Record<string, Record<string, any>>
+    )) {
       const {
         variants: _variants,
         compoundVariants: _compoundVariants,
@@ -133,19 +143,22 @@ export function createStylex<
 
       result[key] = {
         _raw: {
-          styles: flattenStyles(baseStyles, utils),
-          variants: flattenVariantStyles(_variants || {}, utils),
+          styles: flattenStyles(baseStyles, utils) as RNStyle,
+          variants: flattenVariantStyles(_variants || {}, utils) as Record<
+            string,
+            Record<string | number, RNStyle>
+          >,
           compoundVariants: flattenCompoundVariantStyles(
             _compoundVariants || [],
             utils
-          ),
-          defaultVariants: defaultVariants as Record<string, string>,
+          ) as Array<{ css: RNStyle; [k: string]: string | number | RNStyle }>,
+          defaultVariants: defaultVariants as Record<string, string | number>,
         },
         _sheets: {},
       };
     }
 
-    return result as { [K in keyof T]: StyleEntry };
+    return result as { [K in keyof Defs]: StyleEntry };
   }
 
   function resolveEntry(
@@ -197,7 +210,9 @@ export function createStylex<
     const result: object[] = [];
     for (const item of styles) {
       if (!item) continue;
-      result.push(...resolveEntry(item, tokenValues, themeKey, activeMediaQueries));
+      result.push(
+        ...resolveEntry(item, tokenValues, themeKey, activeMediaQueries)
+      );
     }
     return { style: result };
   }
@@ -206,7 +221,12 @@ export function createStylex<
     const { width } = Dimensions.get('window');
     const correctedWidth = PixelRatio.getPixelSizeForLayoutSize(width);
     const activeMediaQueries = resolveMediaRangeQueries(media, correctedWidth);
-    return resolveAll(styles, EMPTY_TOKEN_VALUES, 'default', activeMediaQueries);
+    return resolveAll(
+      styles,
+      EMPTY_TOKEN_VALUES,
+      'default',
+      activeMediaQueries
+    );
   }
 
   function useStylex() {
