@@ -62,7 +62,7 @@
     "npm-watch": "^0.11.0",
     "prettier": "2.3.2",
     "react": "18.0.0",
-    "react-native": "0.69.6",
+    "react-native": "0.83.6",
     "react-native-builder-bob": "0.18.1",
     "react-test-renderer": "18.0.0",
     "ts-jest": "^29.4.9",
@@ -139,5 +139,6 @@
     "ts",
     "jsx",
     "tsx"
-  ]
+  ],
+  "packageManager": "pnpm@9.10.0+sha512.73a29afa36a0d092ece5271de5177ecbf8318d454ecd701343131b8ebc0c1a91c487da46ab77c8e596d6acf1461e3594ced4becedf8921b074fbd8653ed7051c"
 }
