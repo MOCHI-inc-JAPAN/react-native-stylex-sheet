@@ -1,6 +1,9 @@
 import { StyleSheet } from 'react-native';
 import { getDeviceTypeAsync, DeviceType } from 'expo-device';
-import { createStylex, defineVars } from '@mochi-inc-japan/react-native-stylex-sheet';
+import {
+  createStylex,
+  defineVars,
+} from '@mochi-inc-japan/react-native-stylex-sheet';
 
 import {
   size,
@@ -148,7 +151,7 @@ export const stylex = createStylex({
   },
 });
 
-export const { create, props, useStylex, ThemeProvider, createTheme } = stylex;
+export const { create, props, useStylex, createTheme } = stylex;
 
 export const darkTheme = createTheme(vars, {
   // Base palette - unchanged in dark mode
@@ -244,3 +247,5 @@ export const darkTheme = createTheme(vars, {
   // Misc - unchanged
   hairlineWidth: StyleSheet.hairlineWidth,
 });
+
+export { ThemeProvider } from '@mochi-inc-japan/react-native-stylex-sheet';

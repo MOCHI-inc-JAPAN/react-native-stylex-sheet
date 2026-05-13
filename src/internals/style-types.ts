@@ -3,6 +3,10 @@ import type { ThemeToken } from './tokens';
 
 export type RNStyle = ViewStyle | TextStyle | ImageStyle;
 
+export type NamedStyles<T> = {
+  [P in keyof T]: ViewStyle | TextStyle | ImageStyle;
+};
+
 /** `@<mediaKey>` string prefix helper. */
 export type Prefixed<K extends string, T> = `${K}${Extract<
   T,
@@ -41,25 +45,11 @@ export type FlatStyleDef<
   { [KMedia in Prefixed<'@', keyof Media>]?: TokenizedStyleProps } &
   UtilStyleProps<Utils>;
 
-/**
- * A single entry in create(): flat styles plus the optional variant system.
- * Keys in compoundVariants other than `css` are variant selectors.
- */
+/** A single entry in create(): flat styles (base styles, media nesting, util invocations). */
 export type StyleEntryDef<
   Media extends object,
   Utils extends object
-> = FlatStyleDef<Media, Utils> & {
-  variants?: {
-    [Name in string]: {
-      [Pair in string | number]: FlatStyleDef<Media, Utils>;
-    };
-  };
-  compoundVariants?: {
-    css: FlatStyleDef<Media, Utils>;
-    [variantKey: string]: string | number | FlatStyleDef<Media, Utils>;
-  }[];
-  defaultVariants?: { [K in string]?: string | number };
-};
+> = FlatStyleDef<Media, Utils>;
 
 /** Constrains the media config object. */
 export type MediaConfig<T extends object = object> = {

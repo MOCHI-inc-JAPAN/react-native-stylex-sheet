@@ -1,7 +1,11 @@
 import { StyleSheet } from 'react-native';
 import { isThemeToken } from './tokens';
-import { getCompoundKey } from './utils';
 
+/**
+ * スタイルオブジェクトを再帰的に走査し、ThemeToken を解決済みの値に置き換える。
+ * ネストされたオブジェクト（メディアクエリのネストなど）にも再帰的に適用される。
+ * tokenValues に該当する varId がない場合はトークンのデフォルト値を使う。
+ */
 export function resolveTokensDeep(
   styles: Record<string, any>,
   tokenValues: Record<string, string | number>
@@ -9,8 +13,10 @@ export function resolveTokensDeep(
   const out: Record<string, any> = {};
   for (const [k, v] of Object.entries(styles)) {
     if (isThemeToken(v)) {
+      // ThemeToken → activeなテーマの値、なければデフォルト値
       out[k] = tokenValues[v.__varId] ?? v.__default;
     } else if (v !== null && typeof v === 'object' && !Array.isArray(v)) {
+      // ネストされたオブジェクト（メディアクエリのネストなど）は再帰処理
       out[k] = resolveTokensDeep(v as Record<string, any>, tokenValues);
     } else {
       out[k] = v;
@@ -22,92 +28,27 @@ export function resolveTokensDeep(
 export function createStyleSheet({
   tokenValues,
   styles,
-  variants,
-  compoundVariants,
 }: {
   tokenValues: Record<string, string | number>;
   styles: Record<string, any>;
-  variants: Record<string, Record<string, Record<string, any>>>;
-  compoundVariants: Array<Record<string, any>>;
 }): Record<string, any> {
   return StyleSheet.create({
     base: styles ? resolveTokensDeep(styles, tokenValues) : {},
-    ...Object.entries(variants).reduce(
-      (acc: Record<string, any>, [variantProp, variantValues]) => {
-        Object.entries(variantValues).forEach(
-          ([variantName, variantStyles]) => {
-            acc[`${variantProp}_${variantName}`] = resolveTokensDeep(
-              variantStyles,
-              tokenValues
-            );
-          }
-        );
-        return acc;
-      },
-      {}
-    ),
-    ...compoundVariants.reduce(
-      (acc: Record<string, any>, cv: Record<string, any>) => {
-        const { css, ...compounds } = cv;
-        const entries = Object.entries(compounds) as [string, any][];
-        if (entries.length > 1) {
-          acc[getCompoundKey(entries)] = resolveTokensDeep(
-            css || {},
-            tokenValues
-          );
-        }
-        return acc;
-      },
-      {}
-    ),
   });
 }
 
-/**
- * Process the style sheet by inlining media styles.
- *
- * For example:
- *
- * prop_value: {
- *   color: 'red',
- *   md: { color: 'blue' }
- * }
- *
- * with `md` media query being active becomes:
- *
- * prop_value: {
- *   color: 'blue'
- * }
- */
 export function processStyleSheet(
   styleSheet: Record<string, any>,
   media: Record<string, any>,
-  activeMediaQueries: string[]
 ): Record<string, any> {
   const processedStyleSheet: Record<string, any> = {};
 
   Object.entries(styleSheet).forEach(([sKey, sVal]) => {
     processedStyleSheet[sKey] = {};
 
-    const mediaStyles: Record<string, any> = {};
-
     Object.entries(sVal).forEach(([vKey, vValue]) => {
-      if (vKey in media) {
-        if (activeMediaQueries.includes(vKey)) {
-          mediaStyles[vKey] = vValue;
-        }
-      } else {
+      if (!(vKey in media)) {
         processedStyleSheet[sKey][vKey] = vValue;
-      }
-    });
-
-    activeMediaQueries.forEach((mediaKey) => {
-      const style = mediaStyles[mediaKey];
-      if (style) {
-        processedStyleSheet[sKey] = {
-          ...processedStyleSheet[sKey],
-          ...style,
-        };
       }
     });
   });

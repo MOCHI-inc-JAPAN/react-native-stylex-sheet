@@ -2,11 +2,7 @@ import React from 'react';
 import { View } from 'react-native';
 import { render } from '@testing-library/react-native';
 
-import {
-  flattenStyles,
-  flattenVariantStyles,
-  flattenCompoundVariantStyles,
-} from '../internals/utils';
+import { flattenStyles } from '../internals/utils';
 
 import { resolveMediaRangeQueries } from '../internals/media';
 import { createStyleSheet, processStyleSheet } from '../internals/styles';
@@ -250,25 +246,6 @@ describe('Variadic props', () => {
       backgroundColor: 'navy',
     });
   });
-
-  it('defaultVariants are applied automatically', () => {
-    const stylex = createStylex();
-    const styles = stylex.create({
-      button: {
-        height: 40,
-        variants: {
-          size: {
-            sm: { height: 32 },
-            lg: { height: 56 },
-          },
-        },
-        defaultVariants: { size: 'lg' },
-      },
-    });
-
-    const { style } = stylex.props(styles.button);
-    expect(reduceStyles(style)).toMatchObject({ height: 56 });
-  });
 });
 
 // ---------------------------------------------------------------------------
@@ -376,7 +353,7 @@ describe('Media', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Utils (pure function tests — unchanged from original)
+// Utils (pure function tests)
 // ---------------------------------------------------------------------------
 
 describe('Utils', () => {
@@ -407,45 +384,6 @@ describe('Utils', () => {
       bp1: { color: 'blue', fontSize: 10 },
       bp2: { fontSize: 40, width: 300, height: 300 },
     });
-  });
-
-  it('flattenVariantStyles', () => {
-    const result = flattenVariantStyles(
-      { v1: { x: { util1: 10 }, y: { util2: 100 } } },
-      utils
-    );
-    expect(result).toMatchObject({
-      v1: {
-        x: { fontSize: 10, bp1: { fontSize: 5 }, bp2: { fontSize: 20 } },
-        y: {
-          width: 100,
-          height: 100,
-          fontSize: 20,
-          bp1: { fontSize: 10 },
-          bp2: { fontSize: 40, width: 300, height: 300 },
-        },
-      },
-    });
-  });
-
-  it('flattenCompoundVariantStyles', () => {
-    const result = flattenCompoundVariantStyles(
-      [{ v1: 'x', v2: 'y', css: { util2: 100, '@bp1': { color: 'blue' } } }],
-      utils
-    );
-    expect(result).toMatchObject([
-      {
-        v1: 'x',
-        v2: 'y',
-        css: {
-          width: 100,
-          height: 100,
-          fontSize: 20,
-          bp1: { color: 'blue', fontSize: 10 },
-          bp2: { fontSize: 40, width: 300, height: 300 },
-        },
-      },
-    ]);
   });
 
   it('resolveMediaRangeQueries', () => {
@@ -493,65 +431,16 @@ describe('Utils', () => {
     const result = createStyleSheet({
       tokenValues,
       styles: { height: 100, width: 100, sm: { height: 50, width: 50 } },
-      variants: {
-        v1: {
-          one: {
-            backgroundColor: vars.primary,
-            sm: { backgroundColor: 'white' },
-            md: { backgroundColor: 'black' },
-            lg: { backgroundColor: 'pink' },
-          },
-          two: { backgroundColor: vars.secondary },
-          three: { backgroundColor: vars.tertiary },
-        },
-        v2: {
-          one: { borderColor: vars.primary },
-          two: { borderColor: vars.secondary },
-          three: { borderColor: vars.tertiary },
-        },
-      },
-      compoundVariants: [
-        {
-          v1: 'one',
-          v2: 'three',
-          css: { borderRadius: vars.sm, borderWidth: 1 },
-        },
-        {
-          v1: 'two',
-          v2: 'four',
-          css: { borderRadius: vars.lg, borderWidth: 2 },
-        },
-      ],
     });
 
     expect(result).toEqual({
       base: { height: 100, width: 100, sm: { height: 50, width: 50 } },
-      v1_one: {
-        backgroundColor: 'red',
-        sm: { backgroundColor: 'white' },
-        md: { backgroundColor: 'black' },
-        lg: { backgroundColor: 'pink' },
-      },
-      v1_two: { backgroundColor: 'blue' },
-      v1_three: { backgroundColor: 'yellow' },
-      v2_one: { borderColor: 'red' },
-      v2_two: { borderColor: 'blue' },
-      v2_three: { borderColor: 'yellow' },
-      'v1_one+v2_three': { borderRadius: 5, borderWidth: 1 },
-      'v1_two+v2_four': { borderRadius: 15, borderWidth: 2 },
     });
   });
 
   it('processStyleSheet', () => {
     const styleSheet = {
       base: { height: 100, width: 100, sm: { height: 50, width: 50 } },
-      v1_one: {
-        backgroundColor: 'red',
-        sm: { backgroundColor: 'orange' },
-        md: { backgroundColor: 'black' },
-      },
-      v1_two: { backgroundColor: 'blue', lg: { backgroundColor: 'white' } },
-      v1_three: { backgroundColor: 'yellow' },
     };
     const media = {
       sm: '(width >= 600px)',
@@ -561,16 +450,10 @@ describe('Utils', () => {
 
     expect(processStyleSheet(styleSheet, media, ['md', 'lg'])).toEqual({
       base: { height: 100, width: 100 },
-      v1_one: { backgroundColor: 'black' },
-      v1_two: { backgroundColor: 'white' },
-      v1_three: { backgroundColor: 'yellow' },
     });
 
     expect(processStyleSheet(styleSheet, media, ['sm'])).toEqual({
       base: { height: 50, width: 50 },
-      v1_one: { backgroundColor: 'orange' },
-      v1_two: { backgroundColor: 'blue' },
-      v1_three: { backgroundColor: 'yellow' },
     });
   });
 });
