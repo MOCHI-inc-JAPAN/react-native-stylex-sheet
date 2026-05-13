@@ -24,28 +24,6 @@ function merge(target: StyleObject, source: StyleObject): StyleObject {
   return target;
 }
 
-/**
- * Flatten styles so that styles from utils and media queries are recursively merged.
- *
- * For example:
- *
- * Result:
- * {
- *   color: 'red',
- *   fontSize: 20,
- *   width: 100,
- *   height: 100,
- *   '@bp1': {
- *     color: 'blue',
- *     fontSize: 10,
- *   },
- *   '@bp2': {
- *     fontSize: 40,
- *     width: 300,
- *     height: 300,
- *   }
- * }
- */
 export function flattenStyles(
   styles: StyleObject,
   utils: UtilMap | undefined
@@ -53,17 +31,7 @@ export function flattenStyles(
   let flatStyles: StyleObject = {};
 
   Object.entries(styles).forEach(([key, val]) => {
-    if (key.startsWith('@')) {
-      const k = key.replace('@', '');
-      // Media queries
-      if (!flatStyles[k]) {
-        flatStyles[k] = {};
-      }
-      flatStyles[k] = merge(
-        flatStyles[k],
-        flattenStyles(val as StyleObject, utils)
-      );
-    } else if (utils && key in utils) {
+    if (utils && key in utils) {
       // Utils
       const util = utils[key];
       flatStyles = merge(flatStyles, flattenStyles(util(val), utils));
