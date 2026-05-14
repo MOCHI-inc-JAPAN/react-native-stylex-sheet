@@ -73,14 +73,12 @@ export const props = <T extends RNStyle>(
 ): { style: T[] } => {
   return {
     style: args.reduce((acc: T[], arg) => {
-      const xStyleBase = (arg as VariantStyleSheet<string, RNStyle>).default;
-      if (xStyleBase) {
-        return [...acc, xStyleBase] as T[];
-      }
       if (Array.isArray(arg)) {
         return [...acc, ...arg] as T[];
       }
-      return [...acc, arg as RNStyle] as T[];
+      const xStyleBase =
+        (arg as VariantStyleSheet<string, RNStyle>).default ?? arg;
+      return [...acc, xStyleBase] as T[];
     }, []) as T[],
   };
 };

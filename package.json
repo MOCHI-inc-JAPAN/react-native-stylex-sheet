@@ -7,13 +7,13 @@
   "repository": "https://github.com/MOCHI-inc-JAPAN/react-native-stylex-sheet",
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",
-  "types": "lib/typescript/index.d.ts",
+  "types": "lib/types/index.d.ts",
   "exports": {
     "./package.json": "./package.json",
     ".": {
       "require": "./lib/commonjs/index.js",
       "import": "./lib/module/index.js",
-      "types": "./lib/typescript/index.d.ts"
+      "types": "./lib/types/index.d.ts"
     }
   },
   "files": [
@@ -42,7 +42,7 @@
     "@swc/core": "^1.15.33",
     "@swc/jest": "^0.2.39",
     "@testing-library/jest-native": "5.4.0",
-    "@testing-library/react-native": "11.5.0",
+    "@testing-library/react-native": "13.3.3",
     "@types/jest": "29.2.5",
     "@types/node": "^18.19.130",
     "@types/react": "^18.3.28",
@@ -79,7 +79,7 @@
     }
   },
   "react-native-builder-bob": {
-    "source": "src/internals",
+    "source": "src",
     "output": "lib",
     "targets": [
       "commonjs",

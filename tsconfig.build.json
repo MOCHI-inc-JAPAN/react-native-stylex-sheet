@@ -2,12 +2,12 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "declaration": true,
-    "declarationDir": "lib/typescript",
+    "declarationDir": "lib/types",
     "emitDeclarationOnly": true,
-    "rootDir": "src/internals",
+    "rootDir": "src",
     "noUnusedLocals": false,
     "noUnusedParameters": false
   },
-  "include": ["src/internals"],
+  "include": ["src"],
   "exclude": ["node_modules", "example", "lib"]
 }
