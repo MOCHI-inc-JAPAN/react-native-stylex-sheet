@@ -3,7 +3,7 @@ import type { StyleSheet } from 'react-native';
 export type StyleObject = StyleSheet.NamedStyles<any>;
 export type RNStyle = StyleObject[string];
 
-type VariantStyle<S> = { default: S; [key: string]: S };
+export type VariantStyle<S> = { default: S; [key: string]: S };
 export type VariantStyleSheet<Key extends string, S extends RNStyle> = {
   [key in Key]: S;
 } & {
@@ -28,4 +28,12 @@ export type XRNStyleSheets<
   S extends RNStyle = RNStyle
 > = {
   [key in keyof X]: VariantStyleSheet<ExtractVariantKeys<X[key]>, S>;
+};
+
+type ExtractPostFix<T extends string> = T extends `@${string}_${infer PostFix}`
+  ? PostFix
+  : 'default';
+
+export type Variants<A extends Record<string, Record<string, any>>> = {
+  [key in keyof A]: ExtractPostFix<Extract<keyof A[key], string>>;
 };

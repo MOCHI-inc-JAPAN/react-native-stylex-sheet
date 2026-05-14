@@ -38,33 +38,56 @@ export const create = <T extends NamedStyles<any, R>, R extends RNStyle>(
   }, {} as XRNStyleSheets<T, R>);
 };
 
-export const createVariants = <
+type VariantOutput<
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   K extends string,
-  A extends Record<string, RNStyle>
->(
+  A extends Record<string, RNStyle[keyof RNStyle]>
+> = {
+  [key in keyof A as key extends 'default'
+    ? 'default'
+    : `@${K}_${key & string}`]: A[key];
+};
+
+const createVariant = <K extends string, A extends Record<string, any>>(
   variantKey: K,
   args: A
-): Record<`@${K}_${keyof A & string}`, RNStyle> => {
+): VariantOutput<K, A> => {
   return Object.entries(args).reduce((current, [key, value]) => {
-    current[`@${variantKey}_${key}`] = value;
+    if (key === 'default') {
+      (current as any).default = value;
+    } else {
+      (current as any)[`@${variantKey}_${key}`] = value;
+    }
     return current;
-  }, {} as Record<`@${K}_${keyof A & string}`, RNStyle>);
+  }, {} as VariantOutput<K, A>);
+};
+
+type VariantsOutput<A extends Record<string, Record<string, any>>> = {
+  [key in Extract<keyof A, string>]: VariantOutput<key, A[key]>;
+};
+
+export const createVariants = <A extends Record<string, Record<string, any>>>(
+  args: A
+): VariantsOutput<A> => {
+  return Object.entries(args).reduce((current, [key, value]) => {
+    current[key] = createVariant(key, value);
+    return current;
+  }, {} as Record<string, any>) as VariantsOutput<A>;
 };
 
 export const variants = <
-  T extends VariantStyleSheet<any, RNStyle>,
-  V extends Record<string, string>
+  V extends Record<string, string>,
+  T extends VariantStyleSheet<any, RNStyle> = VariantStyleSheet<any, any>
 >(
   target: T,
   variants: V
 ): T[keyof T][] => {
+  const results = [target.default] as T[keyof T][];
   for (const [variantKey, variantValue] of Object.entries(variants)) {
-    const result = target[`@${variantKey}_${variantValue}`];
-    if (result) {
-      return [target.default, result] as T[keyof T][];
-    }
+    const nextStyle = target[`@${variantKey}_${variantValue}`];
+    nextStyle && results.push(nextStyle as T[keyof T]);
   }
-  return [target.default] as T[keyof T][];
+  return results;
 };
 
 type PropValue = VariantStyleSheet<string, RNStyle> | RNStyle;
