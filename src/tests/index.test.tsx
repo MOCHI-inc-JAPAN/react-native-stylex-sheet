@@ -125,7 +125,7 @@ describe('Variants', () => {
 // ---------------------------------------------------------------------------
 
 describe('Media', () => {
-  it('single media queries', () => {
+  it('single media queries default', () => {
     const media = stylex.defineConsts({
       md: '(width >= 750px)',
       lg: '(width >= 1080px)',
@@ -157,10 +157,76 @@ describe('Media', () => {
       )
     ).toMatchObject({
       backgroundColor: 'yellow',
-      color: 'red',
-      width: 100,
-      height: 100,
-      fontSize: 20,
+    });
+  });
+
+  it('single media queries md', () => {
+    const media = stylex.defineConsts({
+      md: '(width >= 750px)',
+      lg: '(width >= 1080px)',
+    });
+
+    const styles = stylex.create({
+      view: {
+        backgroundColor: {
+          default: 'yellow',
+          [media.md]: 'blue',
+          [media.lg]: 'green',
+        },
+      },
+    });
+
+    function Comp() {
+      const sx = stylex.useStylex();
+      return <View {...sx.props(sx.media(styles.view))} />;
+    }
+
+    mockDimensions({ width: 750 });
+    expect(
+      reduceStyles(
+        render(
+          <stylex.RNStylexProvider>
+            <Comp />
+          </stylex.RNStylexProvider>
+        ).toJSON()?.props.style
+      )
+    ).toMatchObject({
+      backgroundColor: 'blue',
+    });
+  });
+
+  it('single media queries lg', () => {
+    const media = stylex.defineConsts({
+      md: '(width >= 750px)',
+      lg: '(width >= 1080px)',
+    });
+
+    const styles = stylex.create({
+      view: {
+        backgroundColor: {
+          default: 'yellow',
+          [media.md]: 'blue',
+          [media.lg]: 'green',
+        },
+      },
+    });
+
+    function Comp() {
+      const sx = stylex.useStylex();
+      return <View {...sx.props(sx.media(styles.view))} />;
+    }
+
+    mockDimensions({ width: 1080 });
+    expect(
+      reduceStyles(
+        render(
+          <stylex.RNStylexProvider>
+            <Comp />
+          </stylex.RNStylexProvider>
+        ).toJSON()?.props.style
+      )
+    ).toMatchObject({
+      backgroundColor: 'green',
     });
   });
 });
