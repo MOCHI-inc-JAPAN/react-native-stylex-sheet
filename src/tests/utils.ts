@@ -14,12 +14,18 @@ export function mockDimensions({
     __esModule: true,
     default: jest.fn().mockReturnValue({ width, height }),
   }));
+  // The react-native index.js exports PixelRatio via a lazy getter:
+  //   get PixelRatio() { return require('./Libraries/Utilities/PixelRatio').default }
+  // so the mock must be wrapped under `default`.
   jest.doMock('react-native/Libraries/Utilities/PixelRatio', () => ({
-    get: () => pixelRatio,
-    getFontScale: () => 1,
-    getPixelSizeForLayoutSize: (layoutSize: number) => layoutSize * pixelRatio,
-    roundToNearestPixel: (layoutSize: number) =>
-      Math.round(layoutSize * pixelRatio) / pixelRatio,
+    __esModule: true,
+    default: {
+      get: () => pixelRatio,
+      getFontScale: () => 1,
+      getPixelSizeForLayoutSize: (layoutSize: number) => layoutSize * pixelRatio,
+      roundToNearestPixel: (layoutSize: number) =>
+        Math.round(layoutSize * pixelRatio) / pixelRatio,
+    },
   }));
   jest.doMock('react-native/Libraries/Utilities/Dimensions', () => ({
     __esModule: true,

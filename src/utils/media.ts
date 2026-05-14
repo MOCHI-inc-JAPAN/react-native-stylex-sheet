@@ -5,23 +5,14 @@ export const media = <T extends VariantStyleSheet<string, RNStyle>>(
   target: T,
   windowWidth: number
 ): T[keyof T][] => {
-  const exStyle = matchMedia(target, windowWidth);
-  if (exStyle) {
-    return [target.default, target[exStyle]] as T[keyof T][];
-  }
-  return [target.default] as T[keyof T][];
-};
-
-export function matchMedia<T extends VariantStyleSheet<string, RNStyle>>(
-  style: T,
-  windowWidth: number
-): string | void {
-  for (const key of Object.keys(style)) {
-    if (matchMediaRangeQuery(key, windowWidth)) {
-      return key;
+  const result: T[keyof T][] = [target.default as T[keyof T]];
+  for (const key of Object.keys(target)) {
+    if (key !== 'default' && matchMediaRangeQuery(key, windowWidth)) {
+      result.push(target[key] as T[keyof T]);
     }
   }
-}
+  return result;
+};
 
 const VALID_SIGNS = ['<=', '<', '>=', '>'];
 
@@ -30,6 +21,8 @@ function matchMediaRangeQuery(query: string, windowWidth: number): boolean {
   const multiRangeRegex = /^\(([0-9]+)px\s([><=]+)\swidth\s+([><=]+)\s+([0-9]+)px\)$/; // prettier-ignore
   const singleRangeMatches = query.match(singleRangeRegex);
   const multiRangeMatches = query.match(multiRangeRegex);
+
+  if (!singleRangeMatches && !multiRangeMatches) return false;
 
   let result;
 
