@@ -10,10 +10,6 @@ export type VariantStyleSheet<Key extends string, S extends RNStyle> = {
   default: S;
 };
 
-type StyleSheetObject = ReturnType<typeof StyleSheet.create>;
-
-export type StylePropValue = StyleSheetObject[string];
-
 export type XRNStyle<S extends RNStyle = RNStyle> = {
   [key in keyof S]: VariantStyle<S[key]> | S[key];
 };

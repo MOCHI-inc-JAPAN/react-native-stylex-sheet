@@ -1,15 +1,13 @@
 import { StyleSheet } from 'react-native';
 import {
-  StylePropValue,
   XRNStyleSheets,
   XRNStyle,
   NamedStyles,
   RNStyle,
+  VariantStyleSheet,
 } from './types';
 
-function bundleStyleSheet<S extends RNStyle>(
-  styleObject: XRNStyle<S>
-): XRNStyleSheets {
+function bundleStyleSheet<S extends RNStyle>(styleObject: XRNStyle<S>) {
   const result = Object.entries(styleObject).reduce(
     (current, [key, value]) => {
       if (typeof value === 'object') {
@@ -26,36 +24,39 @@ function bundleStyleSheet<S extends RNStyle>(
     },
     {
       default: {},
-    } as Record<VariantsKey, StylePropValue>
+    } as Record<string, RNStyle>
   );
   return StyleSheet.create(result);
 }
 
-export const create = <T extends NamedStyles<any>>(
-  args: NamedStyles<T> | NamedStyles<any>
-): XRNStyleSheets => {
+export const create = <T extends NamedStyles<any, R>, R extends RNStyle>(
+  args: T
+): XRNStyleSheets<T, R> => {
   return Object.entries(args).reduce((current, [key, value]) => {
     (current as any)[key] = bundleStyleSheet(value);
     return current;
-  }, {} as XRNStyleSheets);
+  }, {} as XRNStyleSheets<T, R>);
 };
 
 export const createVariants = <
   K extends string,
-  A extends Record<string, StylePropValue>
+  A extends Record<string, RNStyle>
 >(
   variantKey: K,
   args: A
-): Record<`@${K}_${keyof A & string}`, StylePropValue> => {
+): Record<`@${K}_${keyof A & string}`, RNStyle> => {
   return Object.entries(args).reduce((current, [key, value]) => {
     current[`@${variantKey}_${key}`] = value;
     return current;
-  }, {} as Record<`@${K}_${keyof A & string}`, StylePropValue>);
+  }, {} as Record<`@${K}_${keyof A & string}`, RNStyle>);
 };
 
-export const variants = <T extends Record<VariantsKey, StylePropValue>>(
+export const variants = <
+  T extends VariantStyleSheet<any, RNStyle>,
+  V extends Record<string, string>
+>(
   target: T,
-  variants: {}
+  variants: V
 ): T[keyof T][] => {
   for (const [variantKey, variantValue] of Object.entries(variants)) {
     const result = target[`@${variantKey}_${variantValue}`];
@@ -66,20 +67,20 @@ export const variants = <T extends Record<VariantsKey, StylePropValue>>(
   return [target.default] as T[keyof T][];
 };
 
-type PropValue = Record<VariantsKey, StylePropValue> | StylePropValue;
+type PropValue = VariantStyleSheet<string, RNStyle> | RNStyle;
 export const props = <T extends RNStyle>(
-  ...args: (PropValue | StylePropValue[])[]
+  ...args: (PropValue | RNStyle[])[]
 ): { style: T[] } => {
   return {
     style: args.reduce((acc: T[], arg) => {
-      const xStyleBase = (arg as Record<VariantsKey, StylePropValue>).default;
+      const xStyleBase = (arg as VariantStyleSheet<string, RNStyle>).default;
       if (xStyleBase) {
         return [...acc, xStyleBase] as T[];
       }
       if (Array.isArray(arg)) {
         return [...acc, ...arg] as T[];
       }
-      return [...acc, arg as StylePropValue] as T[];
+      return [...acc, arg as RNStyle] as T[];
     }, []) as T[],
   };
 };
