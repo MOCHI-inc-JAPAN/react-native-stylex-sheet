@@ -117,200 +117,91 @@ describe('Variants', () => {
       },
     ]);
   });
-
-  // it('variants are applied correctly', () => {
-  //   const vars = stylex.defineVars({ primaryColor: 'red', size: 100 });
-  //   const styles = stylex.create({
-  //     view: { backgroundColor: vars.color, width: vars.size },
-  //   });
-
-  //   const { style } = stylex.props(styles.view);
-  //   expect(style[0]).toMatchObject({ backgroundColor: 'red', width: 100 });
-  // });
 });
 
-// // ---------------------------------------------------------------------------
-// // defineConsts
-// // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Media queries
+// ---------------------------------------------------------------------------
 
-// describe('defineConsts', () => {
-//   it('returns a frozen object with the given values', () => {
-//     const consts = defineConsts({ maxWidth: 1200, spacing: 8, label: 'hello' });
-//     expect(consts.maxWidth).toBe(1200);
-//     expect(consts.spacing).toBe(8);
-//     expect(consts.label).toBe('hello');
-//     expect(Object.isFrozen(consts)).toBe(true);
-//   });
+describe('Media', () => {
+  it('single media queries', () => {
+    const media = stylex.defineVars({
+      md: '(width >= 750px)',
+      lg: '(width >= 1080px)',
+    });
 
-//   it('constant values can be used directly in styles', () => {
-//     const consts = defineConsts({ buttonHeight: 48 });
-//     const stylex = createStylex();
-//     const styles = stylex.create({
-//       button: { height: consts.buttonHeight },
-//     });
+    const styles = stylex.create({
+      view: {
+        backgroundColor: {
+          default: 'yellow',
+          [media.md]: 'blue',
+          [media.lg]: 'green',
+        },
+      },
+    });
 
-//     const { style } = stylex.props(styles.button);
-//     expect(style[0]).toMatchObject({ height: 48 });
-//   });
-// });
+    function Comp() {
+      const sx = stylex.useMedia();
+      return <View {...sx.props(styles.view)} />;
+    }
 
-// // ---------------------------------------------------------------------------
-// // Variadic props (StyleX variants recipe)
-// // ---------------------------------------------------------------------------
+    mockDimensions({ width: 640 });
+    expect(reduceStyles(render(<Comp />).toJSON()?.props.style)).toMatchObject({
+      backgroundColor: 'yellow',
+      color: 'red',
+      width: 100,
+      height: 100,
+      fontSize: 20,
+    });
 
-// describe('Variadic props', () => {
-//   it('props() accepts multiple StyleEntry args', () => {
-//     const stylex = createStylex();
-//     const styles = stylex.create({
-//       base: { height: 100, width: 100 },
-//       highlighted: { backgroundColor: 'yellow' },
-//     });
+    mockDimensions({ width: 750 });
+    expect(reduceStyles(render(<Comp />).toJSON()?.props.style)).toMatchObject({
+      backgroundColor: 'yellow',
+      color: 'blue',
+      fontSize: 10,
+      width: 50,
+      height: 50,
+    });
 
-//     const { style } = stylex.props(styles.base, styles.highlighted);
-//     expect(reduceStyles(style)).toMatchObject({
-//       height: 100,
-//       width: 100,
-//       backgroundColor: 'yellow',
-//     });
-//   });
+    mockDimensions({ width: 1080 });
+    expect(reduceStyles(render(<Comp />).toJSON()?.props.style)).toMatchObject({
+      backgroundColor: 'yellow',
+      color: 'blue',
+      fontSize: 40,
+      width: 200,
+      height: 200,
+    });
+  });
 
-//   it('props() skips falsy items', () => {
-//     const stylex = createStylex();
-//     const styles = stylex.create({
-//       base: { height: 100 },
-//       extra: { height: 200 },
-//     });
+  it('Conditional styles simulate responsive variants', () => {
+    mockDimensions({ width: 1080 });
 
-//     const { style } = stylex.props(styles.base, false, null, undefined);
-//     expect(reduceStyles(style)).toMatchObject({ height: 100 });
-//   });
+    const stylex = createStylex({
+      media: { md: '(width >= 750px)', lg: '(width >= 1080px)' },
+    });
 
-//   it('useStylex().props() handles multiple entries with tokens', () => {
-//     const vars = defineVars({ primary: 'red' });
-//     const stylex = createStylex();
-//     const styles = stylex.create({
-//       base: { height: 100, width: 100 },
-//       colored: { backgroundColor: vars.primary },
-//     });
-//     const darkTheme = stylex.createTheme(vars, { primary: 'navy' });
+    const styles = stylex.create({
+      primary: { color: 'red' },
+      secondary: { color: 'blue' },
+    });
 
-//     function Comp() {
-//       const sx = stylex.useStylex();
-//       return <View {...sx.props(styles.base, styles.colored)} />;
-//     }
+    function Comp({ useLg }: { useLg: boolean }) {
+      const sx = stylex.useStylex();
+      return (
+        <View
+          {...sx.props(!useLg && styles.primary, useLg && styles.secondary)}
+        />
+      );
+    }
 
-//     const { toJSON } = render(
-//       <stylex.ThemeProvider theme={darkTheme}>
-//         <Comp />
-//       </stylex.ThemeProvider>
-//     );
-//     expect(reduceStyles(toJSON()?.props.style)).toMatchObject({
-//       height: 100,
-//       backgroundColor: 'navy',
-//     });
-//   });
-// });
+    const { toJSON } = render(<Comp useLg={true} />);
+    expect(reduceStyles(toJSON()?.props.style)).toMatchObject({
+      color: 'blue',
+    });
 
-// // ---------------------------------------------------------------------------
-// // Media queries
-// // ---------------------------------------------------------------------------
-
-// describe('Media', () => {
-//   it('Nested utils and media queries', () => {
-//     const stylex = createStylex({
-//       media: {
-//         md: '(width >= 750px)',
-//         lg: '(width >= 1080px)',
-//         xl: '(width >= 1284px)',
-//         xxl: '(width >= 1536px)',
-//       },
-//       utils: {
-//         util1: (value: number) => ({
-//           fontSize: value,
-//           '@md': { fontSize: value / 2 },
-//           '@lg': { fontSize: value * 2 },
-//         }),
-//         util2: (value: number) => ({
-//           util1: 20,
-//           width: value,
-//           height: value,
-//           '@md': { width: value / 2, height: value / 2 },
-//           '@lg': { width: value * 2, height: value * 2 },
-//         }),
-//       },
-//     });
-
-//     const styles = stylex.create({
-//       view: {
-//         backgroundColor: 'yellow',
-//         color: 'red',
-//         util2: 100,
-//         '@md': { color: 'blue' },
-//       },
-//     });
-
-//     function Comp() {
-//       const sx = stylex.useStylex();
-//       return <View {...sx.props(styles.view)} />;
-//     }
-
-//     mockDimensions({ width: 640 });
-//     expect(reduceStyles(render(<Comp />).toJSON()?.props.style)).toMatchObject({
-//       backgroundColor: 'yellow',
-//       color: 'red',
-//       width: 100,
-//       height: 100,
-//       fontSize: 20,
-//     });
-
-//     mockDimensions({ width: 750 });
-//     expect(reduceStyles(render(<Comp />).toJSON()?.props.style)).toMatchObject({
-//       backgroundColor: 'yellow',
-//       color: 'blue',
-//       fontSize: 10,
-//       width: 50,
-//       height: 50,
-//     });
-
-//     mockDimensions({ width: 1080 });
-//     expect(reduceStyles(render(<Comp />).toJSON()?.props.style)).toMatchObject({
-//       backgroundColor: 'yellow',
-//       color: 'blue',
-//       fontSize: 40,
-//       width: 200,
-//       height: 200,
-//     });
-//   });
-
-//   it('Conditional styles simulate responsive variants', () => {
-//     mockDimensions({ width: 1080 });
-
-//     const stylex = createStylex({
-//       media: { md: '(width >= 750px)', lg: '(width >= 1080px)' },
-//     });
-
-//     const styles = stylex.create({
-//       primary: { color: 'red' },
-//       secondary: { color: 'blue' },
-//     });
-
-//     function Comp({ useLg }: { useLg: boolean }) {
-//       const sx = stylex.useStylex();
-//       return (
-//         <View
-//           {...sx.props(!useLg && styles.primary, useLg && styles.secondary)}
-//         />
-//       );
-//     }
-
-//     const { toJSON } = render(<Comp useLg={true} />);
-//     expect(reduceStyles(toJSON()?.props.style)).toMatchObject({
-//       color: 'blue',
-//     });
-
-//     const { toJSON: toJSON2 } = render(<Comp useLg={false} />);
-//     expect(reduceStyles(toJSON2()?.props.style)).toMatchObject({
-//       color: 'red',
-//     });
-//   });
-// });
+    const { toJSON: toJSON2 } = render(<Comp useLg={false} />);
+    expect(reduceStyles(toJSON2()?.props.style)).toMatchObject({
+      color: 'red',
+    });
+  });
+});
