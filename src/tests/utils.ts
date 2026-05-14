@@ -22,7 +22,8 @@ export function mockDimensions({
     default: {
       get: () => pixelRatio,
       getFontScale: () => 1,
-      getPixelSizeForLayoutSize: (layoutSize: number) => layoutSize * pixelRatio,
+      getPixelSizeForLayoutSize: (layoutSize: number) =>
+        layoutSize * pixelRatio,
       roundToNearestPixel: (layoutSize: number) =>
         Math.round(layoutSize * pixelRatio) / pixelRatio,
     },

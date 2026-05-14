@@ -8,24 +8,20 @@ import {
 } from './types';
 
 function bundleStyleSheet<S extends RNStyle>(styleObject: XRNStyle<S>) {
-  const result = Object.entries(styleObject).reduce(
-    (current, [key, value]) => {
-      if (typeof value === 'object') {
-        Object.entries(value).forEach(([variantKey, variantValue]) => {
-          if (!current[variantKey]) {
-            current[variantKey] = {};
-          }
-          (current[variantKey] as any)[key] = variantValue;
-        });
-      } else {
-        (current.default as any)[key] = value;
-      }
-      return current;
-    },
-    {
-      default: {},
-    } as Record<string, RNStyle>
-  );
+  const result = Object.entries(styleObject).reduce((current, [key, value]) => {
+    if (typeof value === 'object') {
+      Object.entries(value).forEach(([variantKey, variantValue]) => {
+        if (!current[variantKey]) {
+          current[variantKey] = {};
+        }
+        (current[variantKey] as any)[key] = variantValue;
+      });
+    } else {
+      current.default ||= {};
+      (current.default as any)[key] = value;
+    }
+    return current;
+  }, {} as Record<string, RNStyle>);
   return StyleSheet.create(result);
 }
 
@@ -82,8 +78,12 @@ export const variants = <
   target: T,
   variants: V
 ): T[keyof T][] => {
-  const results = [target.default] as T[keyof T][];
+  const results = [] as T[keyof T][];
+  if (target.default) {
+    results.push(target.default as T[keyof T]);
+  }
   for (const [variantKey, variantValue] of Object.entries(variants)) {
+    if (variantValue === 'default') continue;
     const nextStyle = target[`@${variantKey}_${variantValue}`];
     nextStyle && results.push(nextStyle as T[keyof T]);
   }

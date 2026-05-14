@@ -3,11 +3,9 @@ import type { StyleSheet } from 'react-native';
 export type StyleObject = StyleSheet.NamedStyles<any>;
 export type RNStyle = StyleObject[string];
 
-export type VariantStyle<S> = { default: S; [key: string]: S };
+export type VariantStyle<S> = { [key: string]: S };
 export type VariantStyleSheet<Key extends string, S extends RNStyle> = {
   [key in Key]: S;
-} & {
-  default: S;
 };
 
 export type XRNStyle<S extends RNStyle = RNStyle> = {
