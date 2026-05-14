@@ -229,4 +229,156 @@ describe('Media', () => {
       backgroundColor: 'green',
     });
   });
+
+  it('multi-range media query matches width inside range', () => {
+    const media = stylex.defineConsts({
+      md: '(750px <= width < 1080px)',
+      lg: '(width >= 1080px)',
+    });
+
+    const styles = stylex.create({
+      view: {
+        backgroundColor: {
+          default: 'yellow',
+          [media.md]: 'blue',
+          [media.lg]: 'green',
+        },
+      },
+    });
+
+    function Comp() {
+      const sx = stylex.useStylex();
+      return <View {...sx.props(sx.media(styles.view))} />;
+    }
+
+    mockDimensions({ width: 900 });
+    expect(
+      reduceStyles(
+        render(
+          <stylex.RNStylexProvider>
+            <Comp />
+          </stylex.RNStylexProvider>
+        ).toJSON()?.props.style
+      )
+    ).toMatchObject({
+      backgroundColor: 'blue',
+    });
+  });
+
+  it('multi-range media query does not match width outside range', () => {
+    const media = stylex.defineConsts({
+      md: '(750px <= width < 1080px)',
+      lg: '(width >= 1080px)',
+    });
+
+    const styles = stylex.create({
+      view: {
+        backgroundColor: {
+          default: 'yellow',
+          [media.md]: 'blue',
+          [media.lg]: 'green',
+        },
+      },
+    });
+
+    function Comp() {
+      const sx = stylex.useStylex();
+      return <View {...sx.props(sx.media(styles.view))} />;
+    }
+
+    mockDimensions({ width: 1080 });
+    expect(
+      reduceStyles(
+        render(
+          <stylex.RNStylexProvider>
+            <Comp />
+          </stylex.RNStylexProvider>
+        ).toJSON()?.props.style
+      )
+    ).toMatchObject({
+      backgroundColor: 'green',
+    });
+  });
+
+  it('multiple properties each with independent breakpoints', () => {
+    const media = stylex.defineConsts({
+      md: '(width >= 750px)',
+      lg: '(width >= 1080px)',
+    });
+
+    const styles = stylex.create({
+      view: {
+        backgroundColor: {
+          default: 'yellow',
+          [media.md]: 'blue',
+          [media.lg]: 'green',
+        },
+        width: {
+          default: 100,
+          [media.md]: 200,
+          [media.lg]: 300,
+        },
+      },
+    });
+
+    function Comp() {
+      const sx = stylex.useStylex();
+      return <View {...sx.props(sx.media(styles.view))} />;
+    }
+
+    mockDimensions({ width: 750 });
+    expect(
+      reduceStyles(
+        render(
+          <stylex.RNStylexProvider>
+            <Comp />
+          </stylex.RNStylexProvider>
+        ).toJSON()?.props.style
+      )
+    ).toMatchObject({
+      backgroundColor: 'blue',
+      width: 200,
+    });
+  });
+
+  it('multiple style entries with media queries are merged in order', () => {
+    const media = stylex.defineConsts({
+      md: '(width >= 750px)',
+    });
+
+    const styles = stylex.create({
+      base: {
+        backgroundColor: {
+          default: 'yellow',
+        },
+        height: 100,
+      },
+      override: {
+        backgroundColor: {
+          [media.md]: 'purple',
+        },
+      },
+    });
+
+    function Comp() {
+      const sx = stylex.useStylex();
+      return (
+        <View {...sx.props(sx.media(styles.base), sx.media(styles.override))} />
+      );
+    }
+
+    mockDimensions({ width: 750 });
+    expect(
+      reduceStyles(
+        render(
+          <stylex.RNStylexProvider>
+            <Comp />
+          </stylex.RNStylexProvider>
+        ).toJSON()?.props.style
+      )
+    ).toMatchObject({
+      backgroundColor: 'purple',
+      height: 100,
+    });
+  });
 });
