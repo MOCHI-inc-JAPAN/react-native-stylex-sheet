@@ -1,4 +1,3 @@
-import { PixelRatio, useWindowDimensions } from 'react-native';
 import {
   Children,
   createContext,
@@ -6,10 +5,10 @@ import {
   useContext,
   useMemo,
 } from 'react';
+import { PixelRatio, useWindowDimensions } from 'react-native';
+import { create, props, variants } from './base';
 import { media } from './media';
 import { RNStyle, VariantStyleSheet } from './types';
-import { create, props, variants, createVariants } from './base';
-import { defineConsts, defineVars } from './tokens';
 
 type IApi = {
   media: <T extends VariantStyleSheet<string, RNStyle>>(
@@ -18,9 +17,6 @@ type IApi = {
   create: typeof create;
   props: typeof props;
   variants: typeof variants;
-  createVariants: typeof createVariants;
-  defineConsts: typeof defineConsts;
-  defineVars: typeof defineVars;
 };
 
 type UserConfig = {
@@ -41,6 +37,7 @@ export const RNStylexProvider = (
   const correctedWidth =
     componentProps.width ?? PixelRatio.getPixelSizeForLayoutSize(width);
   const theme = componentProps.theme ?? 'default';
+
   const value = useMemo<ValueType>(
     () => ({
       width: correctedWidth,
@@ -50,9 +47,6 @@ export const RNStylexProvider = (
       create,
       props,
       variants,
-      createVariants,
-      defineConsts,
-      defineVars,
     }),
     [correctedWidth, theme]
   );

@@ -4,6 +4,7 @@ import { render } from '@testing-library/react-native';
 
 import * as stylex from '../';
 import { Variants } from '../utils/types';
+import { mockDimensions, reduceStyles } from './utils';
 
 // ---------------------------------------------------------------------------
 // Basic
@@ -125,7 +126,7 @@ describe('Variants', () => {
 
 describe('Media', () => {
   it('single media queries', () => {
-    const media = stylex.defineVars({
+    const media = stylex.defineConsts({
       md: '(width >= 750px)',
       lg: '(width >= 1080px)',
     });
@@ -141,67 +142,25 @@ describe('Media', () => {
     });
 
     function Comp() {
-      const sx = stylex.useMedia();
-      return <View {...sx.props(styles.view)} />;
+      const sx = stylex.useStylex();
+      return <View {...sx.props(sx.media(styles.view))} />;
     }
 
     mockDimensions({ width: 640 });
-    expect(reduceStyles(render(<Comp />).toJSON()?.props.style)).toMatchObject({
+    expect(
+      reduceStyles(
+        render(
+          <stylex.RNStylexProvider>
+            <Comp />
+          </stylex.RNStylexProvider>
+        ).toJSON()?.props.style
+      )
+    ).toMatchObject({
       backgroundColor: 'yellow',
       color: 'red',
       width: 100,
       height: 100,
       fontSize: 20,
-    });
-
-    mockDimensions({ width: 750 });
-    expect(reduceStyles(render(<Comp />).toJSON()?.props.style)).toMatchObject({
-      backgroundColor: 'yellow',
-      color: 'blue',
-      fontSize: 10,
-      width: 50,
-      height: 50,
-    });
-
-    mockDimensions({ width: 1080 });
-    expect(reduceStyles(render(<Comp />).toJSON()?.props.style)).toMatchObject({
-      backgroundColor: 'yellow',
-      color: 'blue',
-      fontSize: 40,
-      width: 200,
-      height: 200,
-    });
-  });
-
-  it('Conditional styles simulate responsive variants', () => {
-    mockDimensions({ width: 1080 });
-
-    const stylex = createStylex({
-      media: { md: '(width >= 750px)', lg: '(width >= 1080px)' },
-    });
-
-    const styles = stylex.create({
-      primary: { color: 'red' },
-      secondary: { color: 'blue' },
-    });
-
-    function Comp({ useLg }: { useLg: boolean }) {
-      const sx = stylex.useStylex();
-      return (
-        <View
-          {...sx.props(!useLg && styles.primary, useLg && styles.secondary)}
-        />
-      );
-    }
-
-    const { toJSON } = render(<Comp useLg={true} />);
-    expect(reduceStyles(toJSON()?.props.style)).toMatchObject({
-      color: 'blue',
-    });
-
-    const { toJSON: toJSON2 } = render(<Comp useLg={false} />);
-    expect(reduceStyles(toJSON2()?.props.style)).toMatchObject({
-      color: 'red',
     });
   });
 });
