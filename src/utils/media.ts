@@ -1,26 +1,29 @@
+import { RNStyle, VariantStyleSheet } from './types';
 export type Media = Record<string, string | boolean>;
 
-export function resolveMediaRangeQueries(
-  media: Media,
-  width: number
-): string[] {
-  const activeMediaQueries = [];
+export const media = <T extends VariantStyleSheet<string, RNStyle>>(
+  target: T,
+  windowWidth: number
+): T[keyof T][] => {
+  const exStyle = matchMedia(target, windowWidth);
+  if (exStyle) {
+    return [target.default, target[exStyle]] as T[keyof T][];
+  }
+  return [target.default] as T[keyof T][];
+};
 
-  for (const [name, query] of Object.entries(media)) {
-    if (typeof query === 'boolean' && query) {
-      activeMediaQueries.push(name);
-    } else if (
-      typeof query === 'string' &&
-      matchMediaRangeQuery(query, width)
-    ) {
-      activeMediaQueries.push(name);
+export function matchMedia<T extends VariantStyleSheet<string, RNStyle>>(
+  style: T,
+  windowWidth: number
+): string | void {
+  for (const key of Object.keys(style)) {
+    if (matchMediaRangeQuery(key, windowWidth)) {
+      return key;
     }
   }
-
-  return activeMediaQueries;
 }
 
-const validSigns = ['<=', '<', '>=', '>'];
+const VALID_SIGNS = ['<=', '<', '>=', '>'];
 
 function matchMediaRangeQuery(query: string, windowWidth: number): boolean {
   const singleRangeRegex = /^\(width\s+([><=]+)\s+([0-9]+)px\)$/;
@@ -35,7 +38,7 @@ function matchMediaRangeQuery(query: string, windowWidth: number): boolean {
     const width1 = parseInt(_width1, 10);
     const width2 = parseInt(_width2, 10);
 
-    if (validSigns.includes(sign1) && validSigns.includes(sign2)) {
+    if (VALID_SIGNS.includes(sign1) && VALID_SIGNS.includes(sign2)) {
       result = eval(
         `${width1} ${sign1} ${windowWidth} && ${windowWidth} ${sign2} ${width2}`
       );
@@ -44,7 +47,7 @@ function matchMediaRangeQuery(query: string, windowWidth: number): boolean {
     const [, sign, _width] = singleRangeMatches;
     const width = parseInt(_width, 10);
 
-    if (validSigns.includes(sign)) {
+    if (VALID_SIGNS.includes(sign)) {
       result = eval(`${windowWidth} ${sign} ${width}`);
     }
   }

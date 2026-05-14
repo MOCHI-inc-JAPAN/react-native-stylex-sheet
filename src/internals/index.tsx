@@ -88,7 +88,7 @@ export function useStylex() {
   return useMemo(
     () => ({
       props: (...styles: StyleItem[]) =>
-        resolveAll(styles, tokenValues, themeKey,  media),
+        resolveAll(styles, tokenValues, themeKey, media),
     }),
     [themeKey] // eslint-disable-line react-hooks/exhaustive-deps
   );
