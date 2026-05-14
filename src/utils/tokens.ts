@@ -4,6 +4,7 @@ export function defineVars<T extends Record<string, string | number>>(
   return Object.freeze({ ...defaults });
 }
 
+// NOTE: RNでは、build前compileがないので、defineConstsはdefineVarsのAliasとして扱う
 export function defineConsts<
   T extends Record<string, string | number | boolean>
 >(consts: T): Readonly<T> {

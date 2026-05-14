@@ -4,3 +4,4 @@ node_modules
 .cache
 .vscode
 lib/
+settings.local.json

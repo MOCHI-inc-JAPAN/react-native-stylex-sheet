@@ -32,16 +32,12 @@ describe('Basic', () => {
       view2: { height: 200, width: 200 },
     });
 
-    console.log(stylex.props(styles.view, styles.view2))
     function Comp() {
-      return <View  style={ [
-        { backgroundColor: 'red', height: 100, width: 100 },
-        { height: 200, width: 200 }
-      ]} />;
+      return <View {...stylex.props(styles.view, styles.view2)} />;
     }
 
     const { toJSON } = render(<Comp />);
-    expect(toJSON()?.props.style[0]).toMatchObject({
+    expect(toJSON()?.props.style).toMatchObject({
       backgroundColor: 'red',
       height: 200,
       width: 200,
