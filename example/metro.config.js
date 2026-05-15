@@ -3,7 +3,7 @@ const path = require('path');
 const { getDefaultConfig } = require('expo/metro-config');
 
 const packagesRelative = {
-  '@mochi-inc-japan/react-native-stylex-sheet': '../src/internals',
+  '@mochi-inc-japan/react-native-stylex-sheet': '../src',
 };
 
 const packages = Object.fromEntries(
