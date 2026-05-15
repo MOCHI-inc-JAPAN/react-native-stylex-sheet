@@ -80,14 +80,18 @@ describe('Variants', () => {
     });
 
     const variants = stylex.createVariants({
-      color: vars.colors,
-      size: vars.sizes,
+      var1: {
+        backgroundColor: vars.colors,
+      },
+      var2: {
+        width: vars.sizes,
+      },
     });
 
     const styles = stylex.create({
       view: {
-        backgroundColor: variants.color,
-        width: variants.size,
+        backgroundColor: variants.var1.backgroundColor,
+        width: variants.var2.width,
       },
     });
 
@@ -101,8 +105,8 @@ describe('Variants', () => {
     expect(
       stylex.props(
         stylex.variants<Variants<typeof variants>>(styles.view, {
-          color: 'primary',
-          size: 'medium',
+          var1: 'primary',
+          var2: 'medium',
         })
       ).style
     ).toMatchObject([
@@ -117,6 +121,38 @@ describe('Variants', () => {
         width: 15,
       },
     ]);
+  });
+
+  it('multiple style have same variant value is applied correctly', () => {
+    const variants = stylex.createVariants({
+      shape: {
+        borderRadius: {
+          default: 4,
+          round: 8,
+          square: 0,
+        },
+        fontSize: {
+          default: 14,
+          round: 16,
+          square: 18,
+        },
+      },
+    });
+    const styles = stylex.create({
+      view: {
+        ...variants.shape,
+      },
+    });
+
+    expect(
+      reduceStyles(
+        stylex.props(
+          stylex.variants<Variants<typeof variants>>(styles.view, {
+            shape: 'round',
+          })
+        ).style
+      )
+    ).toMatchObject({ borderRadius: 8, fontSize: 16 });
   });
 });
 
@@ -382,3 +418,13 @@ describe('Media', () => {
     });
   });
 });
+
+// ---------------------------------------------------------------------------
+// Theme queries
+// ---------------------------------------------------------------------------
+
+// describe('Theme', () => {
+//   it('theme usage', () => {
+//     const themes = stylex.defineConsts(['dark']);
+//   });
+// });

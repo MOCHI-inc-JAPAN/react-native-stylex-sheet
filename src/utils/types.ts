@@ -32,6 +32,8 @@ type ExtractPostFix<T extends string> = T extends `@${string}_${infer PostFix}`
   ? PostFix
   : 'default';
 
-export type Variants<A extends Record<string, Record<string, any>>> = {
-  [key in keyof A]: ExtractPostFix<Extract<keyof A[key], string>>;
+export type Variants<
+  A extends Record<string, Record<string, Record<string, any>>>
+> = {
+  [key in keyof A]: ExtractPostFix<Extract<keyof A[key][keyof A[key]], string>>;
 };

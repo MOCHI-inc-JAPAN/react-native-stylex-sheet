@@ -6,7 +6,8 @@ import {
   useMemo,
 } from 'react';
 import { PixelRatio, useWindowDimensions } from 'react-native';
-import { create, props, variants } from './base';
+import { create, props } from './base';
+import { variants } from './variant';
 import { media } from './media';
 import { RNStyle, VariantStyleSheet } from './types';
 

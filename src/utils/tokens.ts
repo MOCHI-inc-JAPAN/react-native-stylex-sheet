@@ -12,13 +12,3 @@ export function defineConsts<
 >(consts: T): Readonly<T> {
   return defineVars(consts);
 }
-
-export function createTheme<T extends {}>(
-  vars: T,
-  overrides: { [K in keyof T]: string | number }
-) {
-  return Object.freeze({
-    ...vars,
-    ...overrides,
-  });
-}
