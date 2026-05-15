@@ -1,4 +1,9 @@
-import { RNStyle, VariantStyle, VariantStyleSheet } from './types';
+import type {
+  RNStyle,
+  VariantStyle,
+  VariantStyleSheet,
+  VariantValue,
+} from './types';
 
 type CreateVariantValueOutput<
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -9,6 +14,9 @@ type CreateVariantValueOutput<
     ? 'default'
     : `@${K}_${key & string}`]: A[key];
 };
+
+export const createVariantKey = (variantKey: string, key: string) =>
+  `@${variantKey}_${key}`;
 
 export const createVariantValue = <
   K extends string,
@@ -21,15 +29,11 @@ export const createVariantValue = <
     if (key === 'default') {
       (current as any).default = value;
     } else {
-      (current as any)[`@${variantKey}_${key}`] = value;
+      (current as any)[createVariantKey(variantKey, key)] = value;
     }
     return current;
   }, {} as CreateVariantValueOutput<K, A>);
 };
-
-type VariantValue<S extends RNStyle = RNStyle> = {
-  [key in keyof S]: VariantStyle<S[key]>;
-}; // Style Fields
 
 type VariantArg<S extends RNStyle = RNStyle> = Record<
   string, // variantKey

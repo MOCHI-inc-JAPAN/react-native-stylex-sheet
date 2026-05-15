@@ -37,3 +37,7 @@ export type Variants<
 > = {
   [key in keyof A]: ExtractPostFix<Extract<keyof A[key][keyof A[key]], string>>;
 };
+
+export type VariantValue<S extends RNStyle = RNStyle> = {
+  [key in keyof S]: VariantStyle<S[key]>;
+}; // Style Fields
