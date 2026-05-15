@@ -10,19 +10,29 @@ export const resolveTheme = <
   themeKey: string
 ) => target[themeKey];
 
+type AllowNoKeyAccessObject<R extends Record<string, any>> = {
+  [K in keyof R]: R[K];
+} & { [key: string]: undefined };
+
 export function createThemes<
   const T extends string[]
 >(
   themes: T
-): { themes: Record<T[number], string> } {
+): {
+  themes: AllowNoKeyAccessObject<{
+    [K in T[number]]: string
+  }>
+} {
   if (new Set(themes).size !== themes.length) {
     throw new Error('Themes must be unique');
   }
   const themesObj = themes.reduce((current, theme) => {
     current[theme as T[number]] = getThemeKey(theme);
     return current;
-  }, {} as Record<T[number], string>);
+  }, {} as { [K in T[number]]: string });
   return {
-    themes: themesObj,
+    themes: themesObj as AllowNoKeyAccessObject<{
+      [K in T[number]]: string
+    }>,
   };
 }

@@ -7,6 +7,7 @@ import {
 } from 'react';
 import { PixelRatio, useWindowDimensions } from 'react-native';
 import { mix, props } from './base';
+import { RNStyle, VariantStyleSheet } from './types';
 
 type IApi = {
   props: typeof props;
@@ -20,9 +21,9 @@ type UserConfig = {
 
 type ValueType = UserConfig & IApi;
 
-const RNStylexContext = createContext<ValueType | undefined>(undefined);
+const RNStyleXContext = createContext<ValueType | undefined>(undefined);
 
-export const RNStylexProvider = (
+export const RNStyleXProvider = (
   componentProps: Partial<Pick<ValueType, 'width' | 'theme'>> & {
     children: React.ReactNode;
   }
@@ -36,8 +37,11 @@ export const RNStylexProvider = (
     () => ({
       width: correctedWidth,
       theme,
-      props,
-      mix: (arg, variants) => {
+      props(...args) {
+        const sheets = args.map((v) => (Array.isArray(v) ? v : v && this.mix(v as VariantStyleSheet<string, RNStyle> )))
+        return props(...sheets);
+      },
+      mix(arg, variants) {
         const config = {
           theme,
           media: correctedWidth,
@@ -51,16 +55,16 @@ export const RNStylexProvider = (
     [correctedWidth, theme]
   );
   return createElement(
-    RNStylexContext.Provider,
+    RNStyleXContext.Provider,
     { value },
     Children.only(componentProps.children)
   );
 };
 
 export const useStylex = () => {
-  const context = useContext(RNStylexContext);
+  const context = useContext(RNStyleXContext);
   if (!context) {
-    throw new Error('useStylex must be used within a RNStylexProvider');
+    throw new Error('useStylex must be used within a RNStyleXProvider');
   }
   return context;
 };

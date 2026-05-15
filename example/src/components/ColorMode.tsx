@@ -6,10 +6,10 @@ import {
   useCallback,
 } from 'react';
 
-import { RNStylexProvider } from '@mochi-inc-japan/react-native-stylex-sheet';
+import { RNStyleXProvider } from '@mochi-inc-japan/react-native-stylex-sheet';
 import { themes } from '../styles';
 
-type ColorMode = 'light' | 'dark';
+type ColorMode = keyof typeof themes;
 
 type ContextValue = {
   colorMode: ColorMode;
@@ -21,17 +21,17 @@ const ColorModeContext = createContext<undefined | ContextValue>(undefined);
 
 export function ColorModeProvider({ children }: { children: ReactNode }) {
   const [colorMode, setColorMode] = useState<ColorMode>('light');
-  const theme = colorMode === 'dark' ? themes.dark : undefined;
-
+  const theme = colorMode === 'dark' ? 'dark' : 'light';
   const toggleColorMode = useCallback(() => {
     setColorMode((p) => (p === 'dark' ? 'light' : 'dark'));
   }, []);
-
   return (
     <ColorModeContext.Provider
       value={{ colorMode, setColorMode, toggleColorMode }}
     >
-      <RNStylexProvider theme={theme}>{children}</RNStylexProvider>
+      <RNStyleXProvider theme={themes[theme]}>
+        {children}
+      </RNStyleXProvider>
     </ColorModeContext.Provider>
   );
 }

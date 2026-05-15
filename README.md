@@ -18,7 +18,7 @@ import {
   defineConsts,
   props,
   useStylex,
-  RNStylexProvider,
+  RNStyleXProvider,
 } from '@mochi-inc-japan/react-native-stylex-sheet';
 
 // 1. Define media breakpoints as constants
@@ -52,13 +52,13 @@ const styles = create({
   },
 });
 
-// 5. Wrap your app in RNStylexProvider
+// 5. Wrap your app in RNStyleXProvider
 function App() {
   const [dark, setDark] = useState(false);
   return (
-    <RNStylexProvider theme={dark ? themes.dark : undefined}>
+    <RNStyleXProvider theme={dark ? themes.dark : undefined}>
       <Screen />
-    </RNStylexProvider>
+    </RNStyleXProvider>
   );
 }
 
@@ -72,7 +72,7 @@ function Button({ danger }: { danger?: boolean }) {
   return (
     <Pressable
       {...sx.props(
-        sx.mix<ButtonVariants>(styles.button, { color: danger ? 'danger' : 'default' })
+        sx.mix<Variants<typeof buttonVariants>>(styles.button, { color: danger ? 'danger' : 'default' })
       )}
     >
       <Text>Press me</Text>
@@ -112,7 +112,7 @@ import {
   defineVars,
   props,
   useStylex,
-  RNStylexProvider,
+  RNStyleXProvider,
 } from '@mochi-inc-japan/react-native-stylex-sheet';
 
 export const media = defineConsts({
@@ -122,7 +122,7 @@ export const media = defineConsts({
 
 export const { themes } = createThemes(['light', 'dark']);
 
-export { create, props, useStylex, RNStylexProvider, defineConsts, defineVars };
+export { create, props, useStylex, RNStyleXProvider, defineConsts, defineVars };
 ```
 
 Components import from this file, not directly from the package:
@@ -252,24 +252,24 @@ const styles = create({
 });
 ```
 
-Activate a theme by passing its key to `RNStylexProvider`:
+Activate a theme by passing its key to `RNStyleXProvider`:
 
 ```tsx
-<RNStylexProvider theme={themes.dark}>
+<RNStyleXProvider theme={themes.dark}>
   <App />
-</RNStylexProvider>
+</RNStyleXProvider>
 ```
 
 ---
 
-### `RNStylexProvider`
+### `RNStyleXProvider`
 
 Provider component that supplies the current `theme` and reactive `width` to all descendant `useStylex()` calls. Must wrap any component that calls `useStylex()`.
 
 ```tsx
-<RNStylexProvider theme={themes.dark}>
+<RNStyleXProvider theme={themes.dark}>
   <Screen />
-</RNStylexProvider>
+</RNStyleXProvider>
 ```
 
 Props:
@@ -280,7 +280,7 @@ Props:
 
 ### `useStylex()`
 
-Hook returning `{ props, mix, width, theme }`. Must be used inside `RNStylexProvider`. `mix` is reactive to the current theme and screen width.
+Hook returning `{ props, mix, width, theme }`. Must be used inside `RNStyleXProvider`. `mix` is reactive to the current theme and screen width.
 
 ```tsx
 function Card({ danger }: { danger: boolean }) {

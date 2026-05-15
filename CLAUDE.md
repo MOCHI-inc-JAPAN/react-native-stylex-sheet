@@ -30,7 +30,7 @@ Build outputs go to `lib/commonjs/` and `lib/module/`. The source for the build 
 export { create, props, mix } from './utils/base';
 export { createVariants } from './utils/variant';
 export { defineConsts, defineVars } from './utils/tokens';
-export { useStylex, RNStylexProvider } from './utils/hooks';
+export { useStylex, RNStyleXProvider } from './utils/hooks';
 export { createThemes } from './utils/theme';
 export type { Variants, XRNStyle, RNStyle, XRNStyleSheets } from './utils/types';
 ```
@@ -45,7 +45,7 @@ A style property value can be a plain React Native value or a **variant-keyed ob
 |---|---|
 | `'default'` | Always (the base value) |
 | `'(width >= 750px)'` | When screen width matches the media range |
-| `themes.dark` (e.g. `'@@theme_dark'`) | When that theme is active in `RNStylexProvider` |
+| `themes.dark` (e.g. `'@@theme_dark'`) | When that theme is active in `RNStyleXProvider` |
 | `'@color_danger'` (from `createVariants`) | When that variant is selected via `mix()` |
 
 ### Usage pattern
@@ -99,9 +99,9 @@ function Button({ danger }: { danger?: boolean }) {
 // app root
 function App() {
   return (
-    <RNStylexProvider theme={themes.dark}>
+    <RNStyleXProvider theme={themes.dark}>
       <Button />
-    </RNStylexProvider>
+    </RNStyleXProvider>
   );
 }
 ```
@@ -111,11 +111,11 @@ function App() {
 - **`defineConsts(obj)`** / **`defineVars(obj)`** — Returns a frozen copy of the object. Identical at runtime (`defineVars` is an alias). Used to define shared constants such as media query strings.
 - **`createVariants(variantDefs)`** — Transforms variant group definitions into style property objects with keys like `@groupName_variantValue`. The output can be spread into `create()`.
 - **`create(styleDefs)`** — Compiles a map of style definitions via `bundleStyleSheet()`, which inverts the variant-keyed structure into a `VariantStyleSheet` (keyed by variant key, not by property name). Calls `StyleSheet.create()` internally.
-- **`mix(target, variantArgs?)`** — Resolves a compiled style entry: always includes `default`, then appends matching variant styles. When called as `sx.mix()` from `useStylex()`, also auto-applies the active theme and media width from `RNStylexProvider`.
+- **`mix(target, variantArgs?)`** — Resolves a compiled style entry: always includes `default`, then appends matching variant styles. When called as `sx.mix()` from `useStylex()`, also auto-applies the active theme and media width from `RNStyleXProvider`.
 - **`props(...args)`** — Flattens compiled style entries and `RNStyle[]` arrays into `{ style: [...] }`. Uses the `default` key from each entry. No reactivity.
-- **`createThemes(names)`** — Creates opaque theme key strings (`@@theme_<name>`) and returns `{ themes: { [name]: key } }`. Pass a theme key to `RNStylexProvider` to activate it.
-- **`RNStylexProvider`** — Context provider. Reads `useWindowDimensions()`, corrects width via `PixelRatio`, and supplies `{ width, theme, props, mix }` through `RNStylexContext`. Required parent for `useStylex()`.
-- **`useStylex()`** — Reads `RNStylexContext`; throws if no provider is present. Returns `{ props, mix, width, theme }` where `mix` is pre-bound to the current theme and corrected pixel width.
+- **`createThemes(names)`** — Creates opaque theme key strings (`@@theme_<name>`) and returns `{ themes: { [name]: key } }`. Pass a theme key to `RNStyleXProvider` to activate it.
+- **`RNStyleXProvider`** — Context provider. Reads `useWindowDimensions()`, corrects width via `PixelRatio`, and supplies `{ width, theme, props, mix }` through `RNStyleXContext`. Required parent for `useStylex()`.
+- **`useStylex()`** — Reads `RNStyleXContext`; throws if no provider is present. Returns `{ props, mix, width, theme }` where `mix` is pre-bound to the current theme and corrected pixel width.
 
 ## Architecture
 
@@ -130,14 +130,14 @@ All runtime logic lives in `src/utils/`. Types are in `src/utils/types.ts`. The 
 | `src/utils/tokens.ts` | `defineVars`, `defineConsts` |
 | `src/utils/theme.ts` | `createThemes`, `getThemeKey`, `resolveTheme` |
 | `src/utils/media.ts` | `media` (resolver), `matchMediaRangeQuery` |
-| `src/utils/hooks.ts` | `RNStylexProvider`, `useStylex` |
+| `src/utils/hooks.ts` | `RNStyleXProvider`, `useStylex` |
 | `src/utils/types.ts` | TypeScript types |
 
 ### Render-time style pipeline
 
 When `useStylex().mix(entry, variantArgs)` is called:
 
-1. `RNStylexProvider` supplies `width` (pixel-corrected) and `theme` via context.
+1. `RNStyleXProvider` supplies `width` (pixel-corrected) and `theme` via context.
 2. `mix([entry, { theme, media: width }], variantArgs)` is called.
 3. `default` style is always included first.
 4. If `theme` is set, `resolveTheme(entry, theme)` looks up the theme-keyed style.

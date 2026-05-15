@@ -186,9 +186,9 @@ describe('Media', () => {
     expect(
       reduceStyles(
         render(
-          <stylex.RNStylexProvider>
+          <stylex.RNStyleXProvider>
             <Comp />
-          </stylex.RNStylexProvider>
+          </stylex.RNStyleXProvider>
         ).toJSON()?.props.style
       )
     ).toMatchObject({
@@ -221,9 +221,9 @@ describe('Media', () => {
     expect(
       reduceStyles(
         render(
-          <stylex.RNStylexProvider>
+          <stylex.RNStyleXProvider>
             <Comp />
-          </stylex.RNStylexProvider>
+          </stylex.RNStyleXProvider>
         ).toJSON()?.props.style
       )
     ).toMatchObject({
@@ -256,9 +256,9 @@ describe('Media', () => {
     expect(
       reduceStyles(
         render(
-          <stylex.RNStylexProvider>
+          <stylex.RNStyleXProvider>
             <Comp />
-          </stylex.RNStylexProvider>
+          </stylex.RNStyleXProvider>
         ).toJSON()?.props.style
       )
     ).toMatchObject({
@@ -291,9 +291,9 @@ describe('Media', () => {
     expect(
       reduceStyles(
         render(
-          <stylex.RNStylexProvider>
+          <stylex.RNStyleXProvider>
             <Comp />
-          </stylex.RNStylexProvider>
+          </stylex.RNStyleXProvider>
         ).toJSON()?.props.style
       )
     ).toMatchObject({
@@ -326,9 +326,9 @@ describe('Media', () => {
     expect(
       reduceStyles(
         render(
-          <stylex.RNStylexProvider>
+          <stylex.RNStyleXProvider>
             <Comp />
-          </stylex.RNStylexProvider>
+          </stylex.RNStyleXProvider>
         ).toJSON()?.props.style
       )
     ).toMatchObject({
@@ -366,9 +366,9 @@ describe('Media', () => {
     expect(
       reduceStyles(
         render(
-          <stylex.RNStylexProvider>
+          <stylex.RNStyleXProvider>
             <Comp />
-          </stylex.RNStylexProvider>
+          </stylex.RNStyleXProvider>
         ).toJSON()?.props.style
       )
     ).toMatchObject({
@@ -407,9 +407,9 @@ describe('Media', () => {
     expect(
       reduceStyles(
         render(
-          <stylex.RNStylexProvider>
+          <stylex.RNStyleXProvider>
             <Comp />
-          </stylex.RNStylexProvider>
+          </stylex.RNStyleXProvider>
         ).toJSON()?.props.style
       )
     ).toMatchObject({
@@ -444,9 +444,9 @@ describe('Theme', () => {
     const outputStyle = (theme: keyof typeof themes) => {
       return reduceStyles(
         render(
-          <stylex.RNStylexProvider theme={themes[theme]}>
+          <stylex.RNStyleXProvider theme={themes[theme]}>
             <Comp />
-          </stylex.RNStylexProvider>
+          </stylex.RNStyleXProvider>
         ).toJSON()?.props.style
       );
     };
