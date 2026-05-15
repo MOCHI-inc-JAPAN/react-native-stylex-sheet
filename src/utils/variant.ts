@@ -99,9 +99,6 @@ export const variants = <
   variants: V
 ): T[keyof T][] => {
   const results = [] as T[keyof T][];
-  if (target.default) {
-    results.push(target.default as T[keyof T]);
-  }
   for (const [variantKey, variantValue] of Object.entries(variants)) {
     if (variantValue === 'default') continue;
     const nextStyle = target[`@${variantKey}_${variantValue}`];

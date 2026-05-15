@@ -6,6 +6,8 @@ import {
   RNStyle,
   VariantStyleSheet,
 } from './types';
+import { media } from './media';
+import { variants } from './variant';
 
 function bundleStyleSheet<S extends RNStyle>(styleObject: XRNStyle<S>) {
   const result = Object.entries(styleObject).reduce((current, [key, value]) => {
@@ -32,6 +34,35 @@ export const create = <T extends NamedStyles<any, R>, R extends RNStyle>(
     (current as any)[key] = bundleStyleSheet(value);
     return current;
   }, {} as XRNStyleSheets<T, R>);
+};
+
+export const mix = <
+  Variants extends Record<string, string>,
+  Theme extends string = string,
+  T extends VariantStyleSheet<string, RNStyle> = VariantStyleSheet<
+    string,
+    RNStyle
+  >
+>(
+  target: T | [T, { theme?: Theme; media?: number | string }],
+  variantArgs?: Variants
+): RNStyle[] => {
+  const [_target, config] = Array.isArray(target) ? target : [target as T, {}];
+  let results = _target.default ? [_target.default] : ([] as RNStyle[]);
+  if (config.theme) {
+    // TODO: theme support
+  }
+  if (variantArgs) {
+    results = [...results, ...variants(_target, variantArgs)];
+  }
+  if (config.media) {
+    if (typeof config.media === 'string') {
+      _target[config.media] && results.push(_target[config.media] as RNStyle);
+    } else {
+      results = [...results, ...media(_target, config.media)];
+    }
+  }
+  return results;
 };
 
 type PropValue = VariantStyleSheet<string, RNStyle> | RNStyle;

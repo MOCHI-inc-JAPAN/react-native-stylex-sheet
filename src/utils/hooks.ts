@@ -6,18 +6,11 @@ import {
   useMemo,
 } from 'react';
 import { PixelRatio, useWindowDimensions } from 'react-native';
-import { create, props } from './base';
-import { variants } from './variant';
-import { media } from './media';
-import { RNStyle, VariantStyleSheet } from './types';
+import { mix, props } from './base';
 
 type IApi = {
-  media: <T extends VariantStyleSheet<string, RNStyle>>(
-    target: T
-  ) => T[keyof T][];
-  create: typeof create;
   props: typeof props;
-  variants: typeof variants;
+  mix: typeof mix;
 };
 
 type UserConfig = {
@@ -43,11 +36,17 @@ export const RNStylexProvider = (
     () => ({
       width: correctedWidth,
       theme,
-      media: <T extends VariantStyleSheet<string, RNStyle>>(target: T) =>
-        media(target, correctedWidth),
-      create,
       props,
-      variants,
+      mix: (arg, variants) => {
+        const config = {
+          theme,
+          media: correctedWidth,
+        };
+        if (Array.isArray(arg)) {
+          return mix([arg[0], { ...config, ...arg[1] }], variants);
+        }
+        return mix([arg, config], variants);
+      },
     }),
     [correctedWidth, theme]
   );

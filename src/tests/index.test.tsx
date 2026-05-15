@@ -104,7 +104,7 @@ describe('Variants', () => {
 
     expect(
       stylex.props(
-        stylex.variants<Variants<typeof variants>>(styles.view, {
+        stylex.mix<Variants<typeof variants>>(styles.view, {
           var1: 'primary',
           var2: 'medium',
         })
@@ -147,7 +147,7 @@ describe('Variants', () => {
     expect(
       reduceStyles(
         stylex.props(
-          stylex.variants<Variants<typeof variants>>(styles.view, {
+          stylex.mix<Variants<typeof variants>>(styles.view, {
             shape: 'round',
           })
         ).style
@@ -179,7 +179,7 @@ describe('Media', () => {
 
     function Comp() {
       const sx = stylex.useStylex();
-      return <View {...sx.props(sx.media(styles.view))} />;
+      return <View {...sx.props(sx.mix(styles.view))} />;
     }
 
     mockDimensions({ width: 640 });
@@ -214,7 +214,7 @@ describe('Media', () => {
 
     function Comp() {
       const sx = stylex.useStylex();
-      return <View {...sx.props(sx.media(styles.view))} />;
+      return <View {...sx.props(sx.mix(styles.view))} />;
     }
 
     mockDimensions({ width: 750 });
@@ -249,7 +249,7 @@ describe('Media', () => {
 
     function Comp() {
       const sx = stylex.useStylex();
-      return <View {...sx.props(sx.media(styles.view))} />;
+      return <View {...sx.props(sx.mix(styles.view))} />;
     }
 
     mockDimensions({ width: 1080 });
@@ -284,7 +284,7 @@ describe('Media', () => {
 
     function Comp() {
       const sx = stylex.useStylex();
-      return <View {...sx.props(sx.media(styles.view))} />;
+      return <View {...sx.props(sx.mix(styles.view))} />;
     }
 
     mockDimensions({ width: 900 });
@@ -319,7 +319,7 @@ describe('Media', () => {
 
     function Comp() {
       const sx = stylex.useStylex();
-      return <View {...sx.props(sx.media(styles.view))} />;
+      return <View {...sx.props(sx.mix(styles.view))} />;
     }
 
     mockDimensions({ width: 1080 });
@@ -359,7 +359,7 @@ describe('Media', () => {
 
     function Comp() {
       const sx = stylex.useStylex();
-      return <View {...sx.props(sx.media(styles.view))} />;
+      return <View {...sx.props(sx.mix(styles.view))} />;
     }
 
     mockDimensions({ width: 750 });
@@ -399,7 +399,7 @@ describe('Media', () => {
     function Comp() {
       const sx = stylex.useStylex();
       return (
-        <View {...sx.props(sx.media(styles.base), sx.media(styles.override))} />
+        <View {...sx.props(sx.mix(styles.base), sx.mix(styles.override))} />
       );
     }
 

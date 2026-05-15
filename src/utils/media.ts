@@ -6,9 +6,6 @@ export const media = <T extends VariantStyleSheet<string, RNStyle>>(
   windowWidth: number
 ): T[keyof T][] => {
   const result: T[keyof T][] = [];
-  if (target.default) {
-    result.push(target.default as T[keyof T]);
-  }
   for (const key of Object.keys(target)) {
     if (matchMediaRangeQuery(key, windowWidth)) {
       result.push(target[key] as T[keyof T]);
