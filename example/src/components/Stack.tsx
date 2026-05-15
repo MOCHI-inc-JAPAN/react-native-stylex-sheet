@@ -1,8 +1,8 @@
 import React, { Fragment } from 'react';
 import { View, ViewStyle } from 'react-native';
+import { create, useStylex } from '@mochi-inc-japan/react-native-stylex-sheet';
 import type { StyleEntry } from '../styles';
 import { Spacer } from './Spacer';
-import { create, useStylex } from '../styles';
 import type { SpaceKey } from '../styles';
 import { flattenChildren } from './utils';
 

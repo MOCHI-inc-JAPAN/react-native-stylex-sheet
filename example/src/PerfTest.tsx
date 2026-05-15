@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { SafeAreaView, ScrollView, Text, View } from 'react-native';
 import { Stack } from './components';
-import { create, useStylex, vars, themes } from './styles';
+import { create, useStylex } from '@mochi-inc-japan/react-native-stylex-sheet';
+import { vars, themes } from './styles';
 
 const styles = create({
   wrapper: {

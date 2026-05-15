@@ -1,14 +1,5 @@
 import { StyleSheet } from 'react-native';
-import {
-  create,
-  props,
-  mix,
-  defineVars,
-  useStylex as _useStylex,
-  RNStylexProvider,
-  createThemes,
-} from '@mochi-inc-japan/react-native-stylex-sheet';
-import type { RNStyle } from '@mochi-inc-japan/react-native-stylex-sheet';
+import { defineVars, createThemes } from '@mochi-inc-japan/react-native-stylex-sheet';
 
 export const media = defineVars({
   md: '(width >= 750px)',
@@ -113,16 +104,3 @@ export const vars = defineVars({
   // Misc
   hairlineWidth: StyleSheet.hairlineWidth,
 });
-
-type PropArg = Parameters<typeof props>[number] | false | null | undefined;
-
-export function useStylex() {
-  const sx = _useStylex();
-  return {
-    ...sx,
-    props: (...args: PropArg[]) =>
-      props(...(args.filter(Boolean) as Parameters<typeof props>)),
-  };
-}
-
-export { create, props, mix, RNStylexProvider };

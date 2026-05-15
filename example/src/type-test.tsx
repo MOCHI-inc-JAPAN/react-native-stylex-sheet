@@ -1,5 +1,5 @@
 import { View } from 'react-native';
-import { create, props } from './styles';
+import { create, props } from '@mochi-inc-japan/react-native-stylex-sheet';
 
 const styles = create({
   box: { backgroundColor: 'red', width: 100, height: 100 },

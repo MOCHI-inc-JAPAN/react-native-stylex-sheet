@@ -69,10 +69,11 @@ export const mix = <
 
 type PropValue = VariantStyleSheet<string, RNStyle> | RNStyle;
 export const props = <T extends RNStyle>(
-  ...args: (PropValue | RNStyle[])[]
+  ...args: (PropValue | RNStyle[] | false | null | undefined)[]
 ): { style: T[] } => {
   return {
     style: args.reduce((acc: T[], arg) => {
+      if (!arg) return acc;
       if (Array.isArray(arg)) {
         return [...acc, ...arg] as T[];
       }

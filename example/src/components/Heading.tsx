@@ -1,6 +1,6 @@
 import { Text as RNText, TextProps } from 'react-native';
+import { create, useStylex } from '@mochi-inc-japan/react-native-stylex-sheet';
 import type { StyleEntry } from '../styles';
-import { create, useStylex } from '../styles';
 
 const headingStyles = create({
   base: { fontWeight: 'bold', color: 'black' },

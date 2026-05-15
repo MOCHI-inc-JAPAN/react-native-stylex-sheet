@@ -1,6 +1,7 @@
 import { Text as RNText, TextProps } from 'react-native';
+import { create, useStylex } from '@mochi-inc-japan/react-native-stylex-sheet';
 import type { StyleEntry } from '../styles';
-import { create, useStylex, vars, themes, media } from '../styles';
+import { vars, themes, media } from '../styles';
 
 const mediaStyles = create({
   base: {

@@ -1,17 +1,31 @@
+import { create, useStylex } from '@mochi-inc-japan/react-native-stylex-sheet';
 import { Text as RNText, TextProps } from 'react-native';
 import type { StyleEntry } from '../styles';
-import { create, useStylex, vars, themes } from '../styles';
+import { themes, vars } from '../styles';
 
 const textStyles = create({
-  base: { color: { default: vars.text, [themes.dark]: vars.textInverted }, fontSize: 16 },
+  base: {
+    color: { default: vars.text, [themes.dark]: vars.textInverted },
+    fontSize: 16,
+  },
   // color variants
   colorPrimary: { color: vars.primary },
-  colorPrimaryText: { color: { default: vars.primaryText, [themes.dark]: vars.primaryMuted } },
-  colorPrimaryMuted: { color: { default: vars.primaryMuted, [themes.dark]: vars.primaryText } },
+  colorPrimaryText: {
+    color: { default: vars.primaryText, [themes.dark]: vars.primaryMuted },
+  },
+  colorPrimaryMuted: {
+    color: { default: vars.primaryMuted, [themes.dark]: vars.primaryText },
+  },
   colorSecondary: { color: vars.secondary },
-  colorSecondaryText: { color: { default: vars.secondaryText, [themes.dark]: vars.secondaryMuted } },
-  colorText: { color: { default: vars.text, [themes.dark]: vars.textInverted } },
-  colorTextInverted: { color: { default: vars.textInverted, [themes.dark]: vars.text } },
+  colorSecondaryText: {
+    color: { default: vars.secondaryText, [themes.dark]: vars.secondaryMuted },
+  },
+  colorText: {
+    color: { default: vars.text, [themes.dark]: vars.textInverted },
+  },
+  colorTextInverted: {
+    color: { default: vars.textInverted, [themes.dark]: vars.text },
+  },
   colorError: { color: vars.error },
   colorSuccess: { color: vars.success },
   colorWarn: { color: vars.warn },
@@ -84,12 +98,7 @@ type Props = TextProps & {
   align?: TextAlign;
 };
 
-export function Text({
-  variant = 'body',
-  color,
-  align,
-  ...rest
-}: Props) {
+export function Text({ variant = 'body', color, align, ...rest }: Props) {
   const sx = useStylex();
   return (
     <RNText

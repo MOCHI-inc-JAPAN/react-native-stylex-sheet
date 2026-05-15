@@ -1,7 +1,12 @@
 import type { RNStyle } from '@mochi-inc-japan/react-native-stylex-sheet';
 
-export { create, props, mix, useStylex, RNStylexProvider, vars, themes, media } from './tokens';
-export type { Variants, XRNStyle, RNStyle, XRNStyleSheets } from '@mochi-inc-japan/react-native-stylex-sheet';
+export { vars, themes, media } from './tokens';
+export type {
+  Variants,
+  XRNStyle,
+  RNStyle,
+  XRNStyleSheets,
+} from '@mochi-inc-japan/react-native-stylex-sheet';
 
 export type StyleEntry = Record<string, RNStyle>;
 

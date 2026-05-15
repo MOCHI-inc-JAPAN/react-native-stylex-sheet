@@ -2,7 +2,8 @@ import { SafeAreaView, ScrollView, Switch, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import { Stack, Text, useColorMode, Media, Heading } from './components';
-import { create, useStylex, vars, themes } from './styles';
+import { create, useStylex } from '@mochi-inc-japan/react-native-stylex-sheet';
+import { vars, themes } from './styles';
 
 const styles = create({
   wrapper: {

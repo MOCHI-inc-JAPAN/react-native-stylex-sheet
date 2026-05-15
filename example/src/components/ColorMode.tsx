@@ -6,7 +6,8 @@ import {
   useCallback,
 } from 'react';
 
-import { RNStylexProvider, themes } from '../styles';
+import { RNStylexProvider } from '@mochi-inc-japan/react-native-stylex-sheet';
+import { themes } from '../styles';
 
 type ColorMode = 'light' | 'dark';
 
