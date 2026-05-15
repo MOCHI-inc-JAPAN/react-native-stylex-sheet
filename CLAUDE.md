@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-**`@mochi-inc-japan/react-native-stylex-sheet`** is a React Native CSS-in-JS library with a StyleX-like API. The `example/` app imports it via the pnpm workspace alias and uses it end-to-end.
+**`@mochi-inc-japan/react-native-stylex-sheet`** is a React Native CSS-in-JS library with a StyleX-inspired API. The `example/` app imports it via the pnpm workspace alias and uses it end-to-end.
 
 React Native has no CSS variables, cascade, inheritance, keyframes, pseudo-elements, or global styles. These features are absent by design. Theming is implemented via React Context instead of CSS variables.
 
@@ -24,83 +24,161 @@ Build outputs go to `lib/commonjs/` and `lib/module/`. The source for the build 
 
 ## API
 
-The library uses a StyleX-like API. Call `createStylex(config)` to get a configured instance:
+### Exports (`src/index.ts`)
 
 ```ts
-const { create, props, useStylex, defineVars, createTheme, ThemeProvider } =
-  createStylex({ media, utils });
+export { create, props, mix } from './utils/base';
+export { createVariants } from './utils/variant';
+export { defineConsts, defineVars } from './utils/tokens';
+export { useStylex, RNStylexProvider } from './utils/hooks';
+export { createThemes } from './utils/theme';
+export type { Variants, XRNStyle, RNStyle, XRNStyleSheets } from './utils/types';
 ```
 
-- **`defineVars(defaults)`** — Defines a group of theme variables with default values. Returns `ThemeToken` objects usable as style values in `create()`.
-- **`createTheme(vars, overrides)`** — Creates a `ThemeOverride` from a `VarsGroup`. Pass to `ThemeProvider` to activate. All keys of `vars` must be provided in `overrides`.
-- **`create(styleDefs)`** — Called at module level. Accepts a map of style definitions (each can have `variants`, `compoundVariants`, `defaultVariants`). Returns a `StyleEntry` map.
-- **`props(...styleEntries)`** — Returns `{ style: StyleProp<any> }` to spread on a component. Uses default token values; reads `Dimensions.get()` synchronously (non-reactive for media queries).
-- **`useStylex()`** — Hook returning `{ props }` that is reactive to the current `ThemeProvider` theme and `useWindowDimensions()`. Use this inside components when theme-switching or media-reactive behavior is needed.
+There is no `createStylex()` factory. All functions are imported directly.
 
-Usage pattern:
+### Core concept: variant-keyed style objects
+
+A style property value can be a plain React Native value or a **variant-keyed object** whose keys select which value applies at render time:
+
+| Key form | When it applies |
+|---|---|
+| `'default'` | Always (the base value) |
+| `'(width >= 750px)'` | When screen width matches the media range |
+| `themes.dark` (e.g. `'@@theme_dark'`) | When that theme is active in `RNStylexProvider` |
+| `'@color_danger'` (from `createVariants`) | When that variant is selected via `mix()` |
+
+### Usage pattern
 
 ```tsx
 // module level
-const vars = stylex.defineVars({ padding: 8, color: 'blue' });
+const media = defineConsts({
+  md: '(width >= 750px)',
+  lg: '(width >= 1080px)',
+});
 
-const styles = stylex.create({
-  button: {
-    padding: vars.padding,
-    backgroundColor: vars.color,
+const { themes } = createThemes(['light', 'dark']);
+
+const buttonVariants = createVariants({
+  color: {
+    backgroundColor: {
+      default: '#6200ee',
+      danger: '#b00020',
+    },
   },
-  sizeSm: { height: 32 },
-  sizeLg: { height: 44 },
+});
+
+const styles = create({
+  button: {
+    ...buttonVariants.color,
+    padding: {
+      default: 12,
+      [media.md]: 16,
+    },
+    borderColor: {
+      default: 'transparent',
+      [themes.dark]: '#fff',
+    },
+  },
 });
 
 // inside component
-function Button({ size }: { size: 'sm' | 'lg' }) {
-  const sx = stylex.useStylex();
+function Button({ danger }: { danger?: boolean }) {
+  const sx = useStylex();
   return (
     <Pressable
       {...sx.props(
-        styles.button,
-        size === 'sm' && styles.sizeSm,
-        size === 'lg' && styles.sizeLg
+        sx.mix<Variants<typeof buttonVariants>>(styles.button, {
+          color: danger ? 'danger' : 'default',
+        })
       )}
     />
   );
 }
+
+// app root
+function App() {
+  return (
+    <RNStylexProvider theme={themes.dark}>
+      <Button />
+    </RNStylexProvider>
+  );
+}
 ```
 
-**Variant pattern**: Since `props()` only applies `defaultVariants` automatically, dynamic variants are expressed as separate `StyleEntry` objects passed conditionally to `props()`.
+### Key functions
+
+- **`defineConsts(obj)`** / **`defineVars(obj)`** — Returns a frozen copy of the object. Identical at runtime (`defineVars` is an alias). Used to define shared constants such as media query strings.
+- **`createVariants(variantDefs)`** — Transforms variant group definitions into style property objects with keys like `@groupName_variantValue`. The output can be spread into `create()`.
+- **`create(styleDefs)`** — Compiles a map of style definitions via `bundleStyleSheet()`, which inverts the variant-keyed structure into a `VariantStyleSheet` (keyed by variant key, not by property name). Calls `StyleSheet.create()` internally.
+- **`mix(target, variantArgs?)`** — Resolves a compiled style entry: always includes `default`, then appends matching variant styles. When called as `sx.mix()` from `useStylex()`, also auto-applies the active theme and media width from `RNStylexProvider`.
+- **`props(...args)`** — Flattens compiled style entries and `RNStyle[]` arrays into `{ style: [...] }`. Uses the `default` key from each entry. No reactivity.
+- **`createThemes(names)`** — Creates opaque theme key strings (`@@theme_<name>`) and returns `{ themes: { [name]: key } }`. Pass a theme key to `RNStylexProvider` to activate it.
+- **`RNStylexProvider`** — Context provider. Reads `useWindowDimensions()`, corrects width via `PixelRatio`, and supplies `{ width, theme, props, mix }` through `RNStylexContext`. Required parent for `useStylex()`.
+- **`useStylex()`** — Reads `RNStylexContext`; throws if no provider is present. Returns `{ props, mix, width, theme }` where `mix` is pre-bound to the current theme and corrected pixel width.
 
 ## Architecture
 
-All runtime logic lives in `src/internals/`. Types are declaration files in `src/types/` and are not compiled. The build source (`react-native-builder-bob`) is `src/internals/`.
+All runtime logic lives in `src/utils/`. Types are in `src/utils/types.ts`. The build source (`react-native-builder-bob`) is `src/internals/`.
+
+### File map
+
+| File | Responsibility |
+|---|---|
+| `src/utils/base.ts` | `create`, `props`, `mix`, `bundleStyleSheet` |
+| `src/utils/variant.ts` | `createVariants`, `variants` (resolver), `createVariantKey` |
+| `src/utils/tokens.ts` | `defineVars`, `defineConsts` |
+| `src/utils/theme.ts` | `createThemes`, `getThemeKey`, `resolveTheme` |
+| `src/utils/media.ts` | `media` (resolver), `matchMediaRangeQuery` |
+| `src/utils/hooks.ts` | `RNStylexProvider`, `useStylex` |
+| `src/utils/types.ts` | TypeScript types |
 
 ### Render-time style pipeline
 
-When `useStylex().props(input)` is called inside a component:
+When `useStylex().mix(entry, variantArgs)` is called:
 
-1. `useContext(ThemeContext)` reads the current `ThemeOverride` (or `null` for defaults)
-2. `resolveEntry()` lazy-creates and caches `StyleSheet.create()` output per theme in `entry._sheets[themeId]`
-3. `processStyleSheet()` inlines active media query styles into the flat sheet (computed from `useWindowDimensions()` + `PixelRatio`)
-4. `resolveVariantStylesList()` and `resolveCompoundVariantStylesList()` look up pre-computed styles by key (e.g. `color_primary`, `v1_one+v2_two`)
-5. Returns `{ style: [base, ...variantStyles, ...compoundStyles] }` — always an array
+1. `RNStylexProvider` supplies `width` (pixel-corrected) and `theme` via context.
+2. `mix([entry, { theme, media: width }], variantArgs)` is called.
+3. `default` style is always included first.
+4. If `theme` is set, `resolveTheme(entry, theme)` looks up the theme-keyed style.
+5. If `variantArgs` is provided, `variants(entry, variantArgs)` looks up `@groupName_value` keys.
+6. `media(entry, width)` iterates all keys, running `matchMediaRangeQuery` against each, and appends matching styles.
+7. Returns `RNStyle[]`.
 
-For the static `props()` (no hook), step 3 uses `Dimensions.get('window')` synchronously — non-reactive on dimension changes.
+For the static `props()`, no theme or media resolution occurs — only the `default` key is used.
 
-### Key design details
+### `bundleStyleSheet` (in `base.ts`)
 
-**Token resolution** (`src/internals/styles.ts` `resolveTokensDeep`): Style values that are `ThemeToken` objects (from `defineVars()`) are replaced with their resolved values at `StyleSheet.create()` time. Without a `ThemeProvider`, `token.__default` is used.
+`create()` calls `bundleStyleSheet()` for each style definition. It inverts the structure:
 
-**Utils are recursive**: `flattenStyles()` in `src/internals/utils.ts` expands util functions before storing styles. A util can call other utils; media keys (`@bp1`) are stripped of `@` and stored as nested objects at flatten time.
+**Input** (property → variant keys → values):
+```ts
+{ backgroundColor: { default: 'white', [themes.dark]: 'black' }, padding: 8 }
+```
 
-**Compound variant keys** are alphabetically sorted and joined: `color_primary+size_small`. Key ordering is deterministic regardless of definition order.
+**Output** (variant key → property → value), passed to `StyleSheet.create()`:
+```ts
+{ default: { backgroundColor: 'white', padding: 8 }, '@@theme_dark': { backgroundColor: 'black' } }
+```
 
-**Media query order matters**: Responsive styles are applied in the order of `Object.entries(media)`. Later active queries overwrite earlier ones, so put more specific queries last.
+### Variant key format
 
-**`defineVars` / `createTheme`**: `defineVars` assigns each token a unique `__varId`. `createTheme(vars, overrides)` builds a `ThemeOverride` that maps `__varId` → resolved value, which `useStylex()` applies when computing styles.
+- Variant keys from `createVariants`: `@<groupName>_<variantValue>` (e.g. `@color_danger`)
+- Theme keys from `createThemes`: `@@theme_<themeName>` (e.g. `@@theme_dark`)
+- Media keys: the raw CSS range query string (e.g. `(width >= 750px)`)
 
-### Unsupported token types
+### Media query matching (`media.ts`)
 
-`shadows` (iOS/Android have incompatible APIs) and `transitions` are intentionally excluded. Use `utils` to implement shadow helpers.
+`matchMediaRangeQuery(key, windowWidth)` supports:
+- `(width >= Npx)` / `(width > Npx)` / `(width <= Npx)` / `(width < Npx)`
+- `(Apx <= width < Bpx)` and similar range forms
+
+Non-matching keys (e.g. variant keys, theme keys) simply return `false` and are skipped.
+
+### Unsupported features
+
+`shadows` (iOS/Android have incompatible APIs) and `transitions` are intentionally excluded.
 
 ## Example app
 
-The `example/` app uses `@mochi-inc-japan/react-native-stylex-sheet` (workspace package). Styles are configured in `example/src/styles/styled.ts` which exports `create`, `props`, `useStylex`, `ThemeProvider`, `vars`, and `darkTheme`. Components import exclusively from `../styles`, not directly from the package.
+The `example/` app uses `@mochi-inc-japan/react-native-stylex-sheet` (workspace package). Styles are configured in `example/src/styles/styled.ts`. Components import exclusively from `../styles`, not directly from the package.

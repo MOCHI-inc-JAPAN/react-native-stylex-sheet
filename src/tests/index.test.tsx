@@ -451,7 +451,6 @@ describe('Theme', () => {
       );
     };
 
-    mockDimensions({ width: 750 });
     expect(outputStyle('light')).toMatchObject({
       borderBlockColor: 'white',
     });

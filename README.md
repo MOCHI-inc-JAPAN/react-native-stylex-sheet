@@ -1,46 +1,80 @@
 # react-native-stylex-sheet
 
-A StyleX-like CSS-in-JS library for React Native. Define styles at module level with `create()`, then apply them with `props()` — no component wrappers required.
+A StyleX-inspired CSS-in-JS library for React Native. Define styles at module level with `create()`, then apply them reactively with `useStylex().mix()` and `props()`.
 
 ## Installation
 
 ```sh
 npm install @mochi-inc-japan/react-native-stylex-sheet
-# or
-yarn add @mochi-inc-japan/react-native-stylex-sheet
 ```
 
 ## Quick start
 
 ```tsx
-import { createStylex, defineVars } from '@mochi-inc-japan/react-native-stylex-sheet';
+import {
+  create,
+  createVariants,
+  createThemes,
+  defineConsts,
+  props,
+  useStylex,
+  RNStylexProvider,
+} from '@mochi-inc-japan/react-native-stylex-sheet';
 
-// 1. Define theme variables
-const vars = defineVars({ primary: '#6200ee', spacing: 16 });
+// 1. Define media breakpoints as constants
+const media = defineConsts({
+  md: '(width >= 750px)',
+  lg: '(width >= 1080px)',
+});
 
-// 2. Configure a stylex instance with media breakpoints and utilities
-const stylex = createStylex({
-  media: {
-    md: '(width >= 750px)',
-    lg: '(width >= 1080px)',
+// 2. Define themes
+const { themes } = createThemes(['light', 'dark']);
+
+// 3. Define variant groups (optional)
+const buttonVariants = createVariants({
+  color: {
+    backgroundColor: {
+      default: '#6200ee',
+      danger: '#b00020',
+    },
   },
 });
 
-// 3. Define styles at module level
-const styles = stylex.create({
+// 4. Define styles at module level
+const styles = create({
   button: {
-    backgroundColor: vars.primary,
-    padding: vars.spacing,
+    ...buttonVariants.color,
+    padding: {
+      default: 12,
+      [media.md]: 16,
+    },
     borderRadius: 8,
   },
-  buttonLarge: { padding: 24 },
 });
 
-// 4. Apply styles in a component
-function Button({ large }: { large?: boolean }) {
-  const sx = stylex.useStylex();
+// 5. Wrap your app in RNStylexProvider
+function App() {
+  const [dark, setDark] = useState(false);
   return (
-    <Pressable {...sx.props(styles.button, large && styles.buttonLarge)}>
+    <RNStylexProvider theme={dark ? themes.dark : undefined}>
+      <Screen />
+    </RNStylexProvider>
+  );
+}
+
+// 6. Use inside components
+import type { Variants } from '@mochi-inc-japan/react-native-stylex-sheet';
+
+type ButtonVariants = Variants<typeof buttonVariants>;
+
+function Button({ danger }: { danger?: boolean }) {
+  const sx = useStylex();
+  return (
+    <Pressable
+      {...sx.props(
+        sx.mix<ButtonVariants>(styles.button, { color: danger ? 'danger' : 'default' })
+      )}
+    >
       <Text>Press me</Text>
     </Pressable>
   );
@@ -49,99 +83,82 @@ function Button({ large }: { large?: boolean }) {
 
 ---
 
+## Core concepts
+
+Styles in this library are **variant-keyed objects**. A style property value can be a plain value or an object whose keys select which value applies:
+
+| Key form | Meaning |
+|---|---|
+| `default` | Fallback value — always applied first |
+| `'(width >= 750px)'` (a media string) | Applied when the screen width matches |
+| `themes.dark` (a theme key) | Applied when that theme is active |
+| `@color_danger` (from `createVariants`) | Applied when that variant is selected |
+
+`mix()` resolves the active key(s) and returns the matching style objects. `props()` just returns the `default` style.
+
+---
+
 ## Setup pattern
 
-Call `createStylex()` once per project and export the returned helpers:
+Define shared constants and export them from a single file:
 
 ```ts
 // src/styles/styled.ts
-import { createStylex, defineVars } from '@mochi-inc-japan/react-native-stylex-sheet';
+import {
+  create,
+  createThemes,
+  createVariants,
+  defineConsts,
+  defineVars,
+  props,
+  useStylex,
+  RNStylexProvider,
+} from '@mochi-inc-japan/react-native-stylex-sheet';
 
-export const vars = defineVars({
-  primary: '#6200ee',
-  background: '#ffffff',
-  text: '#000000',
-  space1: 4,
-  space2: 8,
-  space3: 16,
-  radiiMd: 8,
+export const media = defineConsts({
+  md: '(width >= 750px)',
+  lg: '(width >= 1080px)',
 });
 
-export const stylex = createStylex({
-  media: {
-    md: '(width >= 750px)',
-    lg: '(width >= 1080px)',
-  },
-  utils: {
-    size: (value: number) => ({ width: value, height: value }),
-  },
-});
+export const { themes } = createThemes(['light', 'dark']);
 
-export const { create, props, useStylex, ThemeProvider, createTheme } = stylex;
-
-// Dark theme — overrides all vars
-export const darkTheme = createTheme(vars, {
-  primary: '#bb86fc',
-  background: '#000000',
-  text: '#ffffff',
-  space1: 4,
-  space2: 8,
-  space3: 16,
-  radiiMd: 8,
-});
+export { create, props, useStylex, RNStylexProvider, defineConsts, defineVars };
 ```
 
 Components import from this file, not directly from the package:
 
 ```tsx
-import { create, useStylex, vars } from '../styles/styled';
+import { create, useStylex, media, themes } from '../styles/styled';
 ```
 
 ---
 
 ## API reference
 
-### `createStylex(config)`
+### `defineConsts(consts)`
 
-Creates a configured stylex instance. Call once at the application level.
+Returns a frozen copy of the given object. Use for module-level constants such as media query strings or other shared values.
 
 ```ts
-const stylex = createStylex({
-  media?: Record<string, string | boolean>,
-  utils?: Record<string, (value: any) => StyleObject>,
+const media = defineConsts({
+  md: '(width >= 750px)',
+  lg: '(width >= 1080px)',
 });
 ```
-
-Returns `{ create, props, useStylex, defineVars, defineConsts, createTheme, ThemeProvider, media, utils }`.
-
----
 
 ### `defineVars(defaults)`
 
-Defines a group of theme variables. Returns `ThemeToken` objects that can be used as style values in `create()`. Call at module level.
+Alias for `defineConsts`. Returns a frozen copy. Useful for defining default values that are referenced as style property objects.
 
 ```ts
-const vars = defineVars({
-  primary: '#6200ee',
-  spacing: 16,
-  radius: 8,
+const colors = defineVars({
+  default: 'white',
+  primary: 'red',
+  secondary: 'blue',
 });
-```
 
-Token values are resolved at render time:
-- Without a `ThemeProvider`, the default values in `defineVars` are used.
-- Inside a `ThemeProvider`, the overrides from `createTheme` are applied.
-
----
-
-### `defineConsts(consts)`
-
-Defines non-overridable constants. Returns a frozen copy. Use when you need module-level constants without token indirection.
-
-```ts
-const consts = defineConsts({
-  maxWidth: 1200,
-  hitSlop: 8,
+const styles = create({
+  box: { backgroundColor: colors }, // 'white' by default
 });
 ```
 
@@ -149,91 +166,130 @@ const consts = defineConsts({
 
 ### `create(styleDefs)`
 
-Defines styles at module level. Returns a map of `StyleEntry` handles.
+Defines styles at module level. Each property value can be a plain React Native value or an object mapping variant keys to values. Returns a map of compiled style entries.
 
 ```ts
 const styles = create({
   container: {
-    backgroundColor: vars.background,
-    padding: vars.spacing,
+    backgroundColor: {
+      default: '#fff',
+      [media.md]: '#f0f0f0',
+      [themes.dark]: '#111',
+    },
+    padding: 16,
   },
   title: {
-    color: vars.text,
     fontSize: 24,
     fontWeight: '700',
   },
 });
 ```
 
-Style values can be:
-- Plain React Native values (`number`, `string`)
-- `ThemeToken` objects from `defineVars()`
-- Util invocations (keys matching the configured `utils`)
-- Media-nested style objects (keys prefixed with `@`)
+---
 
-#### Variants
+### `createVariants(variantDefs)`
 
-Each style definition can include `variants`, `compoundVariants`, and `defaultVariants`:
+Defines named variant groups. Each group maps CSS property names to objects with `default` and named variant values. Returns processed variant objects that can be spread into `create()`.
 
 ```ts
+const buttonVariants = createVariants({
+  // variant group name: 'color'
+  color: {
+    backgroundColor: {
+      default: '#6200ee',
+      primary: '#6200ee',
+      danger:  '#b00020',
+    },
+    borderColor: {
+      default: 'transparent',
+      danger:  '#b00020',
+    },
+  },
+  size: {
+    height: {
+      default: 40,
+      sm: 32,
+      lg: 48,
+    },
+  },
+});
+
 const styles = create({
   button: {
+    ...buttonVariants.color, // spread all color-variant properties
+    ...buttonVariants.size,
     borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-
-    variants: {
-      color: {
-        primary: { backgroundColor: vars.primary },
-        secondary: { backgroundColor: vars.secondary },
-      },
-      size: {
-        sm: { height: 32, paddingHorizontal: 12 },
-        lg: { height: 48, paddingHorizontal: 24 },
-      },
-    },
-
-    compoundVariants: [
-      // Applied when color=primary AND size=lg simultaneously
-      { color: 'primary', size: 'lg', css: { borderWidth: 2 } },
-    ],
-
-    defaultVariants: { color: 'primary', size: 'sm' },
   },
 });
 ```
 
-`defaultVariants` are applied automatically. To activate a non-default variant, pass the corresponding `StyleEntry` conditionally to `props()`.
+To type the variant selection map use the `Variants` helper:
+
+```ts
+import type { Variants } from '@mochi-inc-japan/react-native-stylex-sheet';
+
+type ButtonVariants = Variants<typeof buttonVariants>;
+// { color: 'primary' | 'danger' | 'default'; size: 'sm' | 'lg' | 'default' }
+```
 
 ---
 
-### `props(...styleEntries)`
+### `createThemes(themeNames)`
 
-Resolves style entries into `{ style: StyleProp[] }` to spread on any React Native component. Falsy values (`null`, `false`, `undefined`) are silently skipped.
+Creates named theme keys. Returns `{ themes }` where each name maps to an opaque key string used as a style property key in `create()`.
 
-```tsx
-// Module-level usage (non-reactive)
-<View {...props(styles.container, isHighlighted && styles.highlighted)} />
+```ts
+const { themes } = createThemes(['light', 'dark']);
+
+const styles = create({
+  text: {
+    color: {
+      default: '#000',
+      [themes.light]: '#000',
+      [themes.dark]:  '#fff',
+    },
+  },
+});
 ```
 
-- Uses default token values (ignores any active `ThemeProvider`)
-- Reads device dimensions synchronously — **not reactive** to dimension changes
-- Suitable for static styles that never change
+Activate a theme by passing its key to `RNStylexProvider`:
 
-For theme-switching or media-reactive behaviour, use `useStylex().props()` instead.
+```tsx
+<RNStylexProvider theme={themes.dark}>
+  <App />
+</RNStylexProvider>
+```
+
+---
+
+### `RNStylexProvider`
+
+Provider component that supplies the current `theme` and reactive `width` to all descendant `useStylex()` calls. Must wrap any component that calls `useStylex()`.
+
+```tsx
+<RNStylexProvider theme={themes.dark}>
+  <Screen />
+</RNStylexProvider>
+```
+
+Props:
+- `theme` — a theme key string from `createThemes()`, or omit for no active theme
+- `width` — override device width (defaults to `PixelRatio.getPixelSizeForLayoutSize(useWindowDimensions().width)`)
 
 ---
 
 ### `useStylex()`
 
-A React hook returning `{ props }` that is reactive to the current `ThemeProvider` theme and `useWindowDimensions()`. Use this inside components.
+Hook returning `{ props, mix, width, theme }`. Must be used inside `RNStylexProvider`. `mix` is reactive to the current theme and screen width.
 
 ```tsx
-function Card({ highlighted }: { highlighted: boolean }) {
+function Card({ danger }: { danger: boolean }) {
   const sx = useStylex();
   return (
-    <View {...sx.props(styles.card, highlighted && styles.cardHighlighted)}>
-      <Text {...sx.props(styles.title)}>Hello</Text>
+    <View {...sx.props(
+      sx.mix<Variants<typeof cardVariants>>(styles.card, { color: danger ? 'danger' : 'default' })
+    )}>
+      <Text {...sx.props(sx.mix(styles.title))}>Hello</Text>
     </View>
   );
 }
@@ -241,169 +297,66 @@ function Card({ highlighted }: { highlighted: boolean }) {
 
 ---
 
-### Variant pattern
+### `mix(target, variantArgs?)`
 
-Since `props()` / `useStylex().props()` accept any number of `StyleEntry` arguments, the recommended pattern for dynamic variants is to define separate style entries and pass them conditionally:
+Resolves a compiled style entry into an array of `RNStyle` objects:
 
-```tsx
-const buttonStyles = create({
-  base:            { borderRadius: 8, justifyContent: 'center' },
-  variantPrimary:  { backgroundColor: vars.primary },
-  variantDanger:   { backgroundColor: vars.error },
-  sizeSm:          { height: 32, paddingHorizontal: 12 },
-  sizeLg:          { height: 48, paddingHorizontal: 24 },
-});
+1. Always includes the `default` style.
+2. If `variantArgs` is provided, appends the matching variant styles.
+3. When called via `useStylex().mix()`, also applies the active theme and media query styles automatically.
 
-type Variant = 'primary' | 'danger';
-const VARIANT_ENTRY: Record<Variant, StyleEntry> = {
-  primary: buttonStyles.variantPrimary,
-  danger:  buttonStyles.variantDanger,
-};
+```ts
+// Module-level (non-reactive) — only default styles
+const style = mix(styles.button);
 
-function Button({ variant = 'primary', size = 'sm' }: Props) {
-  const sx = useStylex();
-  return (
-    <Pressable
-      {...sx.props(
-        buttonStyles.base,
-        VARIANT_ENTRY[variant],
-        size === 'sm' && buttonStyles.sizeSm,
-        size === 'lg' && buttonStyles.sizeLg,
-      )}
-    />
-  );
-}
+// With explicit variants
+const style = mix(styles.button, { color: 'danger', size: 'lg' });
+
+// Inside component via useStylex().mix() — theme + media are automatic
+const style = sx.mix(styles.button, { color: 'danger' });
 ```
 
 ---
 
-### Theming
+### `props(...args)`
 
-#### `createTheme(vars, overrides)`
-
-Creates a `ThemeOverride` from a `VarsGroup`. All keys from `vars` must be present in `overrides`.
-
-```ts
-const darkTheme = createTheme(vars, {
-  primary: '#bb86fc',
-  background: '#000000',
-  text: '#ffffff',
-  // … all other keys required
-});
-```
-
-#### `ThemeProvider`
-
-Provides a `ThemeOverride` to all descendant components using `useStylex()`. Without a provider (or with `theme={null}`), default token values are used.
+Collects style arrays into `{ style: [...] }` to spread on a React Native component. Accepts compiled style entries, `RNStyle[]` arrays, or plain style objects.
 
 ```tsx
-function App() {
-  const [dark, setDark] = useState(false);
-  return (
-    <ThemeProvider theme={dark ? darkTheme : null}>
-      <Screen />
-    </ThemeProvider>
-  );
-}
+// Combine multiple mix() results
+<View {...sx.props(sx.mix(styles.base), sx.mix(styles.override))} />
+
+// Module-level (non-reactive, default styles only)
+<View {...props(styles.container)} />
 ```
 
 ---
 
-### Media queries
+## Media queries
 
-Configure breakpoints in `createStylex()`:
-
-```ts
-const stylex = createStylex({
-  media: {
-    // CSS Level 4 range queries (width-based only)
-    md:  '(width >= 750px)',
-    lg:  '(width >= 1080px)',
-    xl:  '(width >= 1284px)',
-    // Boolean device-type flags
-    phone:  true,
-    tablet: false,
-  },
-});
-```
-
-**Key ordering matters:** later active queries overwrite earlier ones — put more specific queries last.
-
-Supported range formats:
+Media query strings are used directly as style property keys. The string must match one of the supported range formats:
 
 | Format | Example |
 |---|---|
-| Single lower bound | `(width >= 750px)` / `(width > 750px)` |
-| Single upper bound | `(width <= 1080px)` / `(width < 1080px)` |
+| Lower bound | `(width >= 750px)` / `(width > 750px)` |
+| Upper bound | `(width <= 1080px)` / `(width < 1080px)` |
 | Range | `(750px <= width < 1080px)` |
 
-#### Applying media styles
-
-Nest responsive styles under `@<mediaKey>` inside a style definition:
+**Key ordering matters:** later matching keys overwrite earlier ones, so put more specific queries last.
 
 ```ts
+const media = defineConsts({
+  md: '(width >= 750px)',
+  lg: '(width >= 1080px)', // more specific — put last
+});
+
 const styles = create({
   text: {
-    fontSize: 16,
-    '@md': { fontSize: 18 },
-    '@lg': { fontSize: 20 },
-  },
-});
-```
-
-#### Responsive variants
-
-Pass a responsive object as a variant selector when calling `props()` / `useStylex().props()`:
-
-```tsx
-const styles = create({
-  base: { color: 'black' },
-  sizeSmall:  { fontSize: 14 },
-  sizeMedium: { fontSize: 18 },
-  sizeLarge:  { fontSize: 24 },
-});
-
-function ResponsiveText() {
-  const sx = useStylex();
-  // Non-reactive, dimension-based switching via defaultVariants in create()
-  // is automatic. For reactive switching, use conditional props:
-  return <Text {...sx.props(styles.base, styles.sizeMedium)} />;
-}
-```
-
----
-
-### Utils
-
-Utils are shorthand functions that expand to style objects. They can reference other utils and use media keys.
-
-```ts
-const stylex = createStylex({
-  utils: {
-    // Simple shorthand
-    size: (value: number) => ({ width: value, height: value }),
-
-    // Can reference other utils
-    square: (value: number) => ({
-      size: value,
-      borderRadius: value / 2,
-    }),
-
-    // Can include media keys
-    shadow: (level: 'sm' | 'md' | 'lg') =>
-      ({
-        sm: { elevation: 2, shadowRadius: 3,  shadowOpacity: 0.1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 } },
-        md: { elevation: 5, shadowRadius: 6,  shadowOpacity: 0.2, shadowColor: '#000', shadowOffset: { width: 0, height: 3 } },
-        lg: { elevation: 10, shadowRadius: 12, shadowOpacity: 0.4, shadowColor: '#000', shadowOffset: { width: 0, height: 6 } },
-      })[level],
-  },
-});
-
-const styles = create({
-  card: {
-    size: 100,        // expands to { width: 100, height: 100 }
-    shadow: 'md',     // expands to the shadow object
-    borderRadius: 8,
+    fontSize: {
+      default: 16,
+      [media.md]: 18,
+      [media.lg]: 20, // wins over md when lg also matches
+    },
   },
 });
 ```
@@ -412,27 +365,28 @@ const styles = create({
 
 ## TypeScript
 
-The library is fully typed. Key types exported from the package:
+Key types exported from the package:
 
 ```ts
 import type {
-  StyleEntry,   // handle returned by create()
-  StyleItem,    // StyleEntry | null | false | undefined (accepted by props())
-  ThemeToken,   // opaque token from defineVars()
-  VarsGroup,    // map of ThemeTokens returned by defineVars()
-  ThemeOverride, // result of createTheme()
+  Variants,     // maps variant group names to their allowed values
+  XRNStyle,     // style object where values can be variant-keyed objects
+  RNStyle,      // plain React Native style object
+  XRNStyleSheets, // return type of create()
 } from '@mochi-inc-japan/react-native-stylex-sheet';
 ```
 
-`StyleEntry` can be stored in typed maps for variant dispatch:
+Typed variant dispatch:
 
 ```ts
-import type { StyleEntry } from '../styles';
+import type { Variants } from '@mochi-inc-japan/react-native-stylex-sheet';
 
-const VARIANT_STYLES: Record<'primary' | 'secondary', StyleEntry> = {
-  primary:   styles.variantPrimary,
-  secondary: styles.variantSecondary,
-};
+type ButtonVariants = Variants<typeof buttonVariants>;
+
+function Button({ color }: { color: ButtonVariants['color'] }) {
+  const sx = useStylex();
+  return <Pressable {...sx.props(sx.mix<ButtonVariants>(styles.button, { color }))} />;
+}
 ```
 
 ---
@@ -441,10 +395,10 @@ const VARIANT_STYLES: Record<'primary' | 'secondary', StyleEntry> = {
 
 React Native has no CSS cascade, inheritance, keyframes, pseudo-elements, or global styles — these features are absent by design.
 
-| Not supported | Reason / alternative |
+| Not supported | Alternative |
 |---|---|
-| CSS variables | Use `defineVars()` + `ThemeProvider` |
-| `shadows` token scale | iOS/Android have incompatible shadow APIs — use a `utils` helper |
+| CSS variables | Use `defineVars()` / `defineConsts()` for shared values |
+| `shadows` token scale | iOS/Android have incompatible shadow APIs — define shadow styles directly |
 | `transitions` | Use [Animated API](https://reactnative.dev/docs/animated) or [react-native-reanimated](https://github.com/software-mansion/react-native-reanimated) |
 | Global styles | Not applicable to React Native |
 | Pseudo-classes / elements | Not applicable to React Native |
