@@ -423,8 +423,40 @@ describe('Media', () => {
 // Theme queries
 // ---------------------------------------------------------------------------
 
-// describe('Theme', () => {
-//   it('theme usage', () => {
-//     const themes = stylex.defineConsts(['dark']);
-//   });
-// });
+describe('Theme', () => {
+  it('theme usage', () => {
+    const { themes } = stylex.createThemes(['light', 'dark']);
+    const styles = stylex.create({
+      view: {
+        borderBlockColor: {
+          default: 'black',
+          [themes.light]: 'white',
+          [themes.dark]: 'gray',
+        },
+      },
+    });
+
+    function Comp() {
+      const sx = stylex.useStylex();
+      return <View {...sx.props(sx.mix(styles.view))} />;
+    }
+
+    const outputStyle = (theme: keyof typeof themes) => {
+      return reduceStyles(
+        render(
+          <stylex.RNStylexProvider theme={themes[theme]}>
+            <Comp />
+          </stylex.RNStylexProvider>
+        ).toJSON()?.props.style
+      );
+    };
+
+    mockDimensions({ width: 750 });
+    expect(outputStyle('light')).toMatchObject({
+      borderBlockColor: 'white',
+    });
+    expect(outputStyle('dark')).toMatchObject({
+      borderBlockColor: 'gray',
+    });
+  });
+});

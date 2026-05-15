@@ -8,6 +8,7 @@ import {
 } from './types';
 import { media } from './media';
 import { variants } from './variant';
+import { resolveTheme } from './theme';
 
 function bundleStyleSheet<S extends RNStyle>(styleObject: XRNStyle<S>) {
   const result = Object.entries(styleObject).reduce((current, [key, value]) => {
@@ -50,7 +51,8 @@ export const mix = <
   const [_target, config] = Array.isArray(target) ? target : [target as T, {}];
   let results = _target.default ? [_target.default] : ([] as RNStyle[]);
   if (config.theme) {
-    // TODO: theme support
+    const themeSheet = resolveTheme(_target, config.theme);
+    themeSheet && results.push(themeSheet);
   }
   if (variantArgs) {
     results = [...results, ...variants(_target, variantArgs)];
