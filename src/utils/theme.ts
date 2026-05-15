@@ -10,7 +10,11 @@ export const resolveTheme = <
   themeKey: string
 ) => target[themeKey];
 
-export function createThemes<T extends string[]>(themes: T) {
+export function createThemes<
+  const T extends string[]
+>(
+  themes: T
+): { themes: Record<T[number], string> } {
   if (new Set(themes).size !== themes.length) {
     throw new Error('Themes must be unique');
   }

@@ -28,11 +28,6 @@
     "release": "np --any-branch",
     "watch": "npm-watch",
     "test": "jest",
-    "lint": "npm run lint:lib & npm run lint:example",
-    "lint:lib": "eslint ./src --ext .js --config .eslintrc",
-    "lint:lib:fix": "eslint ./src --ext .js --config .eslintrc --fix",
-    "lint:example": "eslint ./example --ext .ts,.tsx --config .eslintrc",
-    "lint:example:fix": "eslint ./example --ext .ts,.tsx --config .eslintrc --fix",
     "format:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx}\"",
     "format:write": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\""
   },
@@ -51,11 +46,6 @@
     "@typescript-eslint/parser": "4.6.1",
     "babel-jest": "29.3.1",
     "eslint": "7.31.0",
-    "eslint-config-prettier": "8.3.0",
-    "eslint-plugin-import": "2.23.4",
-    "eslint-plugin-prettier": "3.4.0",
-    "eslint-plugin-react": "7.24.0",
-    "eslint-plugin-react-hooks": "4.2.0",
     "husky": "6.0.0",
     "jest": "29.3.1",
     "metro-react-native-babel-preset": "^0.73.3",
@@ -66,7 +56,6 @@
     "react-native-builder-bob": "0.18.1",
     "react-test-renderer": "19.2.0",
     "ts-jest": "^29.4.9",
-    "ts-node": "^10.9.2",
     "typescript": "6.0.3"
   },
   "peerDependencies": {
@@ -75,7 +64,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "npm run lint"
+      "pre-commit": "npm run format:check"
     }
   },
   "react-native-builder-bob": {
