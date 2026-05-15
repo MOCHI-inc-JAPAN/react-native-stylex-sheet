@@ -11,8 +11,6 @@ const headingStyles = create({
   h5: { fontSize: 16, color: 'black' },
   underlined: { paddingRight: 4, paddingLeft: 4 },
   defaultH1NoUnderline: { marginBottom: 2 },
-  // Compound variant equivalents: underline border color per heading
-  // NOTE: RN Text cannot render borderBottom — wrap in View if needed
   underlinedH1: { borderBottomColor: 'purple', borderBottomWidth: 1 },
   underlinedH2: { borderBottomColor: 'green', borderBottomWidth: 1 },
   underlinedH3: { borderBottomColor: 'blue', borderBottomWidth: 1 },

@@ -2,12 +2,12 @@ import { SafeAreaView, ScrollView, Switch, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import { Stack, Text, useColorMode, Media, Heading } from './components';
-import { create, useStylex, vars } from './styles';
+import { create, useStylex, vars, themes } from './styles';
 
 const styles = create({
   wrapper: {
     flex: 1,
-    backgroundColor: vars.background,
+    backgroundColor: { default: vars.background, [themes.dark]: '#000000' },
   },
   content: {
     flex: 1,
@@ -15,7 +15,9 @@ const styles = create({
   box: {
     minHeight: 100,
     backgroundColor: vars.primaryMuted,
-    flexCenter: 'row',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
     borderRadius: vars.radiiMd,
   },
 });

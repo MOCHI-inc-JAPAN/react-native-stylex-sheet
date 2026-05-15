@@ -1,17 +1,29 @@
 import { Text as RNText, TextProps } from 'react-native';
 import type { StyleEntry } from '../styles';
-import { create, useStylex, vars } from '../styles';
+import { create, useStylex, vars, themes, media } from '../styles';
 
 const mediaStyles = create({
   base: {
-    color: vars.text,
-    '@xxl': { fontSize: 64 },
-    '@xl': { fontSize: 48 },
-    '@lg': { fontSize: 32 },
-    '@md': { fontSize: 24 },
-    fontSize: 16,
-    marginTopRem: 1,
-    marginBottomRem: 1,
+    color: { default: vars.text, [themes.dark]: vars.textInverted },
+    fontSize: {
+      default: 16,
+      [media.md]: 24,
+      [media.lg]: 32,
+      [media.xl]: 48,
+      [media.xxl]: 64,
+    },
+    marginTop: {
+      [media.md]: 18,
+      [media.lg]: 20,
+      [media.xl]: 24,
+      [media.xxl]: 32,
+    },
+    marginBottom: {
+      [media.md]: 18,
+      [media.lg]: 20,
+      [media.xl]: 24,
+      [media.xxl]: 32,
+    },
   },
   colorPrimary: { color: 'red' },
   colorSecondary: { color: 'blue' },

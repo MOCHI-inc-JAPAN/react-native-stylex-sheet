@@ -1,27 +1,27 @@
 import { Text as RNText, TextProps } from 'react-native';
 import type { StyleEntry } from '../styles';
-import { create, useStylex, vars } from '../styles';
+import { create, useStylex, vars, themes } from '../styles';
 
 const textStyles = create({
-  base: { color: vars.text, fontSize: 16 },
+  base: { color: { default: vars.text, [themes.dark]: vars.textInverted }, fontSize: 16 },
   // color variants
   colorPrimary: { color: vars.primary },
-  colorPrimaryText: { color: vars.primaryText },
-  colorPrimaryMuted: { color: vars.primaryMuted },
+  colorPrimaryText: { color: { default: vars.primaryText, [themes.dark]: vars.primaryMuted } },
+  colorPrimaryMuted: { color: { default: vars.primaryMuted, [themes.dark]: vars.primaryText } },
   colorSecondary: { color: vars.secondary },
-  colorSecondaryText: { color: vars.secondaryText },
-  colorText: { color: vars.text },
-  colorTextInverted: { color: vars.textInverted },
+  colorSecondaryText: { color: { default: vars.secondaryText, [themes.dark]: vars.secondaryMuted } },
+  colorText: { color: { default: vars.text, [themes.dark]: vars.textInverted } },
+  colorTextInverted: { color: { default: vars.textInverted, [themes.dark]: vars.text } },
   colorError: { color: vars.error },
   colorSuccess: { color: vars.success },
   colorWarn: { color: vars.warn },
   // variant styles
-  variantBody: { typography: '$body' },
-  variantBodySmall: { typography: '$bodySmall' },
-  variantBodyExtraSmall: { typography: '$bodyExtraSmall' },
-  variantTitle1: { typography: '$title1' },
-  variantTitle2: { typography: '$title2' },
-  variantTitle3: { typography: '$title3' },
+  variantBody: { fontSize: 18, fontWeight: '400' },
+  variantBodySmall: { fontSize: 16, fontWeight: '400' },
+  variantBodyExtraSmall: { fontSize: 14, fontWeight: '500' },
+  variantTitle1: { fontSize: 32, fontWeight: '700' },
+  variantTitle2: { fontSize: 24, fontWeight: '700' },
+  variantTitle3: { fontSize: 20, fontWeight: '700' },
   // align styles
   alignLeft: { textAlign: 'left' },
   alignRight: { textAlign: 'right' },

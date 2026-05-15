@@ -1,5 +1,9 @@
-export { create, props, useStylex, ThemeProvider, vars, darkTheme } from './styled';
-export type { StyleEntry, ThemeOverride } from '@mochi-inc-japan/react-native-stylex-sheet';
+import type { RNStyle } from '@mochi-inc-japan/react-native-stylex-sheet';
+
+export { create, props, mix, useStylex, RNStylexProvider, vars, themes, media } from './tokens';
+export type { Variants, XRNStyle, RNStyle, XRNStyleSheets } from '@mochi-inc-japan/react-native-stylex-sheet';
+
+export type StyleEntry = Record<string, RNStyle>;
 
 export type SpaceKey =
   | 'none'
