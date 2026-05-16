@@ -206,6 +206,41 @@ describe('Media', () => {
     });
   });
 
+  it('usage from hooks implicitly', () => {
+    const media = stylex.defineConsts({
+      md: '(width >= 750px)',
+      lg: '(width >= 1080px)',
+    });
+
+    const styles = stylex.create({
+      view: {
+        backgroundColor: {
+          default: 'yellow',
+          [media.md]: 'blue',
+          [media.lg]: 'green',
+        },
+      },
+    });
+
+    function Comp() {
+      const sx = stylex.useStylex();
+      return <View {...sx.props(styles.view)} />;
+    }
+
+    mockDimensions({ width: 750 });
+    expect(
+      reduceStyles(
+        render(
+          <stylex.RNStyleXProvider>
+            <Comp />
+          </stylex.RNStyleXProvider>
+        ).toJSON()?.props.style
+      )
+    ).toMatchObject({
+      backgroundColor: 'blue',
+    });
+  });
+
   it('single media queries md', () => {
     const media = stylex.defineConsts({
       md: '(width >= 750px)',
@@ -434,7 +469,42 @@ describe('Media', () => {
 // ---------------------------------------------------------------------------
 
 describe('Theme', () => {
-  it('theme usage', () => {
+  it('theme usage implicitly', () => {
+    const { themes } = stylex.createThemes(['light', 'dark']);
+    const styles = stylex.create({
+      view: {
+        borderBlockColor: {
+          default: 'black',
+          [themes.light]: 'white',
+          [themes.dark]: 'gray',
+        },
+      },
+    });
+
+    function Comp() {
+      const sx = stylex.useStylex();
+      return <View {...sx.props(styles.view)} />;
+    }
+
+    const outputStyle = (theme: keyof typeof themes) => {
+      return reduceStyles(
+        render(
+          <stylex.RNStyleXProvider theme={themes[theme]}>
+            <Comp />
+          </stylex.RNStyleXProvider>
+        ).toJSON()?.props.style
+      );
+    };
+
+    expect(outputStyle('light')).toMatchObject({
+      borderBlockColor: 'white',
+    });
+    expect(outputStyle('dark')).toMatchObject({
+      borderBlockColor: 'gray',
+    });
+  });
+
+  it('theme usage implicitly', () => {
     const { themes } = stylex.createThemes(['light', 'dark']);
     const styles = stylex.create({
       view: {
