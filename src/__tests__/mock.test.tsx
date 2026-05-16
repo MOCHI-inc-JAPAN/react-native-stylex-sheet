@@ -1,7 +1,7 @@
 import React from 'react';
 import { View } from 'react-native';
 
-import { mockDimensions, finalStyle } from './test-utils';
+import { mockDimensions, finalStyle } from './utils/test-utils';
 
 jest.mock('../utils/media', () => {
   const originalModule = jest.requireActual('../utils/media');

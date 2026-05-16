@@ -4,7 +4,7 @@ import { StyleSheet, View } from 'react-native';
 
 import * as stylex from '../';
 import { Variants } from '../utils/types';
-import { finalStyle, reduceStyles } from './test-utils';
+import { finalStyle, reduceStyles } from './utils/test-utils';
 
 // ---------------------------------------------------------------------------
 // Basic

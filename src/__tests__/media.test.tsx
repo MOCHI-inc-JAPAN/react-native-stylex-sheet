@@ -2,7 +2,7 @@ import React from 'react';
 import { View } from 'react-native';
 
 import * as stylex from '../';
-import { mockDimensions, finalStyle } from './test-utils';
+import { mockDimensions, finalStyle } from './utils/test-utils';
 
 // ---------------------------------------------------------------------------
 // Media queries

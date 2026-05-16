@@ -25,6 +25,7 @@ export default {
   modulePathIgnorePatterns: [
     '<rootDir>/example/node_modules',
     '<rootDir>/lib/',
+    '<rootDir>/src/__tests__/utils',
   ],
   transformIgnorePatterns: [`node_modules/(?!(?:.pnpm/)?(${esmModules}))`],
   setupFilesAfterEnv: ['@testing-library/jest-native/extend-expect'],

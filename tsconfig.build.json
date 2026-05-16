@@ -2,12 +2,10 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "declaration": true,
-    "declarationDir": "lib/types",
-    "emitDeclarationOnly": true,
     "rootDir": "src",
     "noUnusedLocals": false,
     "noUnusedParameters": false
   },
   "include": ["src"],
-  "exclude": ["node_modules", "example", "lib"]
+  "exclude": ["node_modules", "example", "lib", "src/**/*.test.*", "src/__tests__"]
 }
