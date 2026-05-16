@@ -1,15 +1,58 @@
+import {
+  create,
+  createVariants,
+  useStylex,
+  type Variants,
+} from '@mochi-inc-japan/react-native-stylex-sheet';
 import React, { Fragment } from 'react';
-import { ViewStyle } from 'react-native';
+import { View, ViewStyle } from 'react-native';
+import type { SpaceKey } from '../styles';
 import { Spacer } from './Spacer';
-
-import { styled, Theme } from '../styles';
 import { flattenChildren } from './utils';
 
+const variants = createVariants({
+  align: {
+    alignItems: {
+      center: 'center',
+      start: 'flex-start',
+      end: 'flex-end',
+      stretch: 'stretch',
+    },
+  },
+  axis: {
+    flexDirection: {
+      x: 'row',
+      y: 'column',
+    },
+  },
+  justify: {
+    justifyContent: {
+      center: 'center',
+      start: 'flex-start',
+      end: 'flex-end',
+      between: 'space-between',
+      around: 'space-around',
+    },
+  },
+});
+
+const stackStyles = create({
+  base: {
+    ...variants.align,
+    ...variants.axis,
+    ...variants.justify,
+  },
+});
+
+type Axis = 'x' | 'y';
+type Align = 'center' | 'start' | 'end' | 'stretch';
+type Justify = 'center' | 'start' | 'end' | 'between' | 'around';
+
 type Props = {
-  space: keyof Theme['space'];
-  axis?: 'x' | 'y';
-  align?: 'center' | 'start' | 'end' | 'stretch';
-  justify?: 'center' | 'start' | 'end' | 'between' | 'around';
+  space: SpaceKey;
+  axis?: Axis;
+  align?: Align;
+  justify?: Justify;
   style?: ViewStyle;
   debug?: boolean;
   children: React.ReactNode;
@@ -22,23 +65,33 @@ export function Stack({
   align,
   justify,
   debug,
-  ...rest
+  style,
 }: Props) {
-  // Handle `React.Fragments` by flattening children
+  const sx = useStylex();
   const elements = flattenChildren(children).filter((e) =>
     React.isValidElement(e)
   );
-
   const lastIndex = React.Children.count(elements) - 1;
 
+
   return (
-    <StyledStack axis={axis} align={align} justify={justify} {...rest}>
+    <View
+      {...sx.props(
+        sx.mix<Variants<typeof variants>>(
+          stackStyles.base,
+          {
+            align,
+            axis,
+            justify,
+          }
+        ),
+        style
+      )}
+    >
       {elements.map((child, index) => {
         if (!React.isValidElement(child)) return null;
 
         const isSpacer = (child as any).type['__SPACER__'];
-
-        // Just return spacers as is so that they can override the default spacing
         if (isSpacer) return React.cloneElement(child);
 
         const isLast = index === lastIndex;
@@ -55,28 +108,6 @@ export function Stack({
           </Fragment>
         );
       })}
-    </StyledStack>
+    </View>
   );
 }
-
-const StyledStack = styled('View', {
-  variants: {
-    axis: {
-      x: { flexDirection: 'row' },
-      y: { flexDirection: 'column' },
-    },
-    align: {
-      center: { alignItems: 'center' },
-      start: { alignItems: 'flex-start' },
-      end: { alignItems: 'flex-end' },
-      stretch: { alignItems: 'stretch' },
-    },
-    justify: {
-      center: { justifyContent: 'center' },
-      start: { justifyContent: 'flex-start' },
-      end: { justifyContent: 'flex-end' },
-      between: { justifyContent: 'space-between' },
-      around: { justifyContent: 'space-around' },
-    },
-  },
-});

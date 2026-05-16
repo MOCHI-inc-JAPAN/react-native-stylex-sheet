@@ -1,7 +1,24 @@
-import * as stitches from './styled';
+import type { RNStyle } from '@mochi-inc-japan/react-native-stylex-sheet';
 
-const { styled, css, createTheme, useTheme, theme, darkTheme, ThemeProvider } = stitches; // prettier-ignore
+export { vars, themes, media } from './tokens';
+export type {
+  Variants,
+  XRNStyle,
+  RNStyle,
+  XRNStyleSheets,
+} from '@mochi-inc-japan/react-native-stylex-sheet';
 
-export { Theme } from './styled';
-export { themeProp } from './helpers';
-export { styled, css, createTheme, useTheme, theme, darkTheme, ThemeProvider };
+export type StyleEntry = Record<string, RNStyle>;
+
+export type SpaceKey =
+  | 'none'
+  | '1'
+  | '2'
+  | '3'
+  | '4'
+  | '5'
+  | '6'
+  | '7'
+  | '8'
+  | '9'
+  | 'max';

@@ -1,98 +1,63 @@
-import { TextProps as RNTextProps } from 'react-native';
-import { styled, css } from '../styles';
+import { Text as RNText, TextProps } from 'react-native';
+import { create, useStylex, createVariants, type Variants, defineVars } from '@mochi-inc-japan/react-native-stylex-sheet';
+import { themes } from '../styles';
 
-export const Typography = styled('Text', {
-  color: '$text',
-  fontSizeRem: 1,
+const defaultColors = defineVars({ h1: 'purple', h2: 'green', h3: 'blue', h4: 'red', h5: 'black' })
+
+const headingVariants = createVariants({
+  heading: {
+    fontSize: { h1: 40, h2: 24, h3: 20, h4: 17.6, h5: 16 },
+    color: defaultColors,
+    borderBottomColor: defaultColors,
+  },
+  underlinedHeading: {
+    borderBottomWidth: { true: 1},
+  },
+});
+
+const darkHeadingVariants = createVariants({
+  heading: { color: { ...defaultColors, h5: 'white' }, borderBottomColor: { ...defaultColors, h5: 'white' }, },
+})
+
+const themeOverrides = create({
+  [themes.dark]: {...darkHeadingVariants.heading}
+})
+
+const headingStyles = create({
+  base: { fontWeight: 'bold', color: 'black' },
+  heading: {
+    ...headingVariants.heading,
+    ...headingVariants.underlinedHeading,
+  },
+  underlined: { paddingRight: 4, paddingLeft: 4 },
+  defaultH1NoUnderline: { marginBottom: 2 },
 });
 
 type HeadingSize = 'h1' | 'h2' | 'h3' | 'h4' | 'h5';
 
-export type HeadingProps = RNTextProps & {
+export type HeadingProps = TextProps & {
   heading?: HeadingSize;
+  underlined?: boolean;
 };
 
-const underLinedStyle = css({
-  compoundVariants: [
-    {
-      heading: 'h5',
-      underlined: true,
-      css: {
-        borderBottomColor: 'black',
-        borderBottomWidth: 1,
-      },
-    },
-    {
-      heading: 'h4',
-      underlined: true,
-      css: {
-        borderBottomColor: 'red',
-        borderBottomWidth: 1,
-      },
-    },
-    {
-      heading: 'h3',
-      underlined: true,
-      css: {
-        borderBottomColor: 'blue',
-        borderBottomWidth: 1,
-      },
-    },
-    {
-      heading: 'h2',
-      underlined: true,
-      css: {
-        borderBottomColor: 'green',
-        borderBottomWidth: 1,
-      },
-    },
-    {
-      heading: 'h1',
-      underlined: true,
-      css: {
-        borderBottomColor: 'purple',
-        borderBottomWidth: 1,
-      },
-    },
-    {
-      // NOTE: To check default variants
-      heading: 'h1',
-      underlined: false,
-      css: {
-        marginBottom: 2,
-      },
-    },
-  ],
-});
-
-export const Heading = styled(
-  'Text',
-  {
-    fontWeight: 'bold',
-    color: '$plainText',
-    variants: {
-      heading: {
-        h5: { fontSizeRem: 1.0, color: 'black' },
-        h4: { fontSizeRem: 1.1, color: 'red' },
-        h3: { fontSizeRem: 1.25, color: 'blue' },
-        h2: { fontSizeRem: 1.5, color: 'green' },
-        h1: { fontSizeRem: 2.5, color: 'purple' },
-      },
-      underlined: {
-        true: {
-          paddingRight: 4,
-          paddingLeft: 4,
-        },
-      },
-    },
-    defaultVariants: {
-      heading: 'h1',
-      underlined: false,
-    },
-  },
-  // TODO: fix this! Native `Text` cannot have a border bottom!
-  // The example needs to wrap the text with a `View` and apply the border bottom to that.
-  underLinedStyle
-).attrs(() => ({
-  accessibilityRole: 'text',
-}));
+export function Heading({
+  heading = 'h1',
+  underlined = false,
+  ...rest
+}: HeadingProps) {
+  const sx = useStylex();
+  return (
+    <RNText
+      accessibilityRole="text"
+      {...sx.props(
+        headingStyles.base,
+        sx.mix<Variants<typeof headingVariants>>(headingStyles.heading, {
+          heading,
+          underlinedHeading: underlined
+        }),
+        sx.mix<Variants<typeof darkHeadingVariants>>(themeOverrides[sx.theme], {heading})
+      )}
+      {...rest}
+    />
+  );
+}

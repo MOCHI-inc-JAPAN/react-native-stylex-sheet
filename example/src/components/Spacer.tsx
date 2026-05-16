@@ -1,22 +1,71 @@
-import { styled, themeProp } from '../styles';
+import { View } from 'react-native';
+import { create, useStylex, createVariants, type Variants } from '@mochi-inc-japan/react-native-stylex-sheet';
+import { vars } from '../styles';
+import type { SpaceKey } from '../styles';
 
-export const Spacer = styled('View', {
-  flexShrink: 0,
-  variants: {
-    ...themeProp('size', 'space', (value) => ({
-      width: `$space${value}`,
-      height: `$space${value}`,
-    })),
-    axis: {
-      x: { height: 'auto' },
-      y: { width: 'auto' },
+const spacerVariants = createVariants({
+  size: {
+    width: {
+      none: vars.spaceNone,
+      '1': vars.space1,
+      '2': vars.space2,
+      '3': vars.space3,
+      '4': vars.space4,
+      '5': vars.space5,
+      '6': vars.space6,
+      '7': vars.space7,
+      '8': vars.space8,
+      '9': vars.space9,
+      max: vars.space9,
     },
-    debug: {
-      true: { backgroundColor: 'red' },
-      false: { backgroundColor: 'transparent' },
+    height: {
+      none: vars.spaceNone,
+      '1': vars.space1,
+      '2': vars.space2,
+      '3': vars.space3,
+      '4': vars.space4,
+      '5': vars.space5,
+      '6': vars.space6,
+      '7': vars.space7,
+      '8': vars.space8,
+      '9': vars.space9,
+      max: vars.space9,
+    },
+  },
+  axis: {
+    flexDirection: {
+      x: 'row',
+      y: 'column',
     },
   },
 });
 
-// @ts-ignore
-Spacer.__SPACER__ = true; // This is used to detect spacers inside Stack component
+const spacerStyles = create({
+  base: { flexShrink: 0 },
+  spacer: {
+    ...spacerVariants.size,
+    ...spacerVariants.axis,
+  },
+  debug: { backgroundColor: 'red' },
+});
+
+type Props = {
+  size: SpaceKey;
+  axis?: 'x' | 'y';
+  debug?: boolean;
+};
+
+export function Spacer({ size, axis, debug }: Props) {
+  const sx = useStylex();
+  return (
+    <View
+      {...sx.props(
+        spacerStyles.base,
+        sx.mix<Variants<typeof spacerVariants>>(spacerStyles.spacer, { size, axis }),
+        debug && spacerStyles.debug
+      )}
+    />
+  );
+}
+
+(Spacer as any).__SPACER__ = true;

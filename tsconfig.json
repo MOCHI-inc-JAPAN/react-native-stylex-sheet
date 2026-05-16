@@ -1,6 +1,6 @@
 {
   "exclude": ["node_modules", "example", "lib"],
-  "include": ["src/index", "src/types"],
+  "include": ["src"],
   "compilerOptions": {
     "allowJs": true,
     "allowUnreachableCode": false,
@@ -10,7 +10,7 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "importHelpers": true,
-    "importsNotUsedAsValues": "error",
+    "ignoreDeprecations": "6.0",
     "jsx": "react-native",
     "lib": ["esnext", "dom"],
     "module": "esnext",
@@ -25,8 +25,6 @@
     "sourceMap": true,
     "strict": true,
     "target": "esnext",
-    "paths": {
-      "stitches-native": ["./src/index"]
-    }
+    "types": ["node", "jest"]
   }
 }

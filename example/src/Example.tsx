@@ -1,16 +1,39 @@
-import { Switch } from 'react-native';
+import { SafeAreaView, ScrollView, Switch, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import { Stack, Text, useColorMode, Media, Heading } from './components';
-import { styled } from './styles';
+import { create, useStylex } from '@mochi-inc-japan/react-native-stylex-sheet';
+import { vars, themes } from './styles';
+
+const styles = create({
+  wrapper: {
+    flex: 1,
+    backgroundColor: { default: vars.background, [themes.dark]: '#000000' },
+  },
+  content: {
+    flex: 1,
+  },
+  box: {
+    minHeight: 100,
+    backgroundColor: vars.primaryMuted,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: vars.radiiMd,
+  },
+});
 
 export default function Example() {
   const { toggleColorMode, colorMode } = useColorMode();
   const [example, changeExample] = useState(false);
+  const sx = useStylex();
 
   return (
-    <Wrapper>
-      <Content>
+    <SafeAreaView {...sx.props(styles.wrapper)}>
+      <ScrollView
+        {...sx.props(styles.content)}
+        contentContainerStyle={{ padding: 8 }}
+      >
         <Stack axis="y" space="4">
           <Stack axis="x" space="3" align="center">
             <Text variant="title1">Example app</Text>
@@ -19,6 +42,7 @@ export default function Example() {
               <Switch value={example} onValueChange={changeExample} />
             </Stack>
           </Stack>
+
           {example && (
             <Stack axis="y" space="2">
               <Heading>Variants</Heading>
@@ -26,16 +50,7 @@ export default function Example() {
               <Heading heading="h3">Heading</Heading>
               <Heading heading="h4">Heading</Heading>
               <Heading heading="h5">Heading</Heading>
-              <Heading
-                // NOTE: test inline media style.
-                // marginTopRem util function turns media style.
-                css={{
-                  marginTopRem: 1,
-                }}
-                underlined
-              >
-                Compound Variants
-              </Heading>
+              <Heading underlined>Compound Variants</Heading>
               <Heading underlined heading="h2">
                 Heading
               </Heading>
@@ -50,11 +65,12 @@ export default function Example() {
               </Heading>
             </Stack>
           )}
+
           {!example && (
             <>
               <Stack axis="y" space="2">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <Box key={i}>
+                  <View key={i} {...sx.props(styles.box)}>
                     <Stack axis="x" space="4">
                       <Text variant="body" color="primaryText">
                         Box {i + 1}
@@ -66,20 +82,12 @@ export default function Example() {
                         YYY
                       </Text>
                     </Stack>
-                  </Box>
+                  </View>
                 ))}
               </Stack>
 
-              <Media
-                color={{
-                  '@xxl': 'primary',
-                  '@xl': 'secondary',
-                  '@lg': 'third',
-                  '@md': 'forth',
-                  '@sm': 'fifth',
-                }}
-              >
-                Font size and color should change as viewport changes
+              <Media color={colorMode === 'dark' ? 'secondary' : 'primary'}>
+                Font size should change as viewport changes
               </Media>
 
               <Stack axis="x" space="3" align="center" justify="end">
@@ -92,29 +100,9 @@ export default function Example() {
             </>
           )}
         </Stack>
-      </Content>
+      </ScrollView>
 
       <StatusBar style={colorMode === 'dark' ? 'light' : 'dark'} />
-    </Wrapper>
+    </SafeAreaView>
   );
 }
-
-const Wrapper = styled('SafeAreaView', {
-  flex: 1,
-  backgroundColor: '$background',
-});
-
-const Content = styled('ScrollView', {
-  flex: 1,
-}).attrs((p) => ({
-  contentContainerStyle: {
-    padding: p.theme.space[2],
-  },
-}));
-
-const Box = styled('View', {
-  minHeight: 100,
-  backgroundColor: '$primaryMuted',
-  flexCenter: 'row',
-  borderRadius: '$md',
-});
