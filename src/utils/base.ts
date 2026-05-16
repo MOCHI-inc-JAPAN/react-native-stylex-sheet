@@ -58,11 +58,7 @@ export const mix = <
     results = [...results, ...variants(_target, variantArgs)];
   }
   if (config.media) {
-    if (typeof config.media === 'string') {
-      _target[config.media] && results.push(_target[config.media] as RNStyle);
-    } else {
-      results = [...results, ...media(_target, config.media)];
-    }
+    results = [...results, ...media(_target, config.media)];
   }
   return results;
 };

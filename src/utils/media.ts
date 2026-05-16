@@ -3,20 +3,49 @@ export type Media = Record<string, string | boolean>;
 
 export const media = <T extends VariantStyleSheet<string, RNStyle>>(
   target: T,
-  windowWidth: number
+  mediaParam: number | string
 ): T[keyof T][] => {
   const result: T[keyof T][] = [];
-  for (const key of Object.keys(target)) {
-    if (matchMediaRangeQuery(key, windowWidth)) {
-      result.push(target[key] as T[keyof T]);
+  if (typeof mediaParam === 'string') {
+    target[mediaParam] && result.push(target[mediaParam] as T[keyof T]);
+  } else if (typeof mediaParam === 'number') {
+    const keys = Object.keys(target);
+    for (let i = keys.length - 1; i >= 0; i--) {
+      const key = keys[i];
+      // NOTE: Assuming only one media query will match, we can break after the first match.
+      // Because later media query will be more specific and override the previous one.
+      if (matchMediaRangeQuery(key, mediaParam)) {
+        result.push(target[key] as T[keyof T]);
+        break;
+      }
     }
   }
   return result;
 };
 
+// NOTE: input mediaKeys
+// - ['(750px <= width < 1080px)', '(width > 750px)']
+export const detectMedia = (
+  mediaKeys: string[] | Record<string, string>,
+  width: number
+): string | undefined => {
+  const targets = Array.isArray(mediaKeys)
+    ? mediaKeys
+    : Object.values(mediaKeys);
+  for (const val of targets) {
+    if (matchMediaRangeQuery(val, width)) {
+      return val;
+    }
+  }
+  return;
+};
+
 const VALID_SIGNS = ['<=', '<', '>=', '>'];
 
-function matchMediaRangeQuery(query: string, windowWidth: number): boolean {
+export function matchMediaRangeQuery(
+  query: string,
+  windowWidth: number
+): boolean {
   const singleRangeRegex = /^\(width\s+([><=]+)\s+([0-9]+)px\)$/;
   const multiRangeRegex = /^\(([0-9]+)px\s([><=]+)\swidth\s+([><=]+)\s+([0-9]+)px\)$/; // prettier-ignore
   const singleRangeMatches = query.match(singleRangeRegex);
