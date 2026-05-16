@@ -462,6 +462,56 @@ describe('Media', () => {
       height: 100,
     });
   });
+
+  it('preset media effectively key access', () => {
+    const media = stylex.defineConsts({
+      md: '(width >= 750px)',
+      lg: '(width >= 1080px)',
+    });
+
+    const styles = stylex.create({
+      view: {
+        backgroundColor: {
+          default: 'yellow',
+          [media.md]: 'blue',
+          [media.lg]: 'green',
+        },
+        width: {
+          default: 100,
+          [media.md]: 200,
+          [media.lg]: 300,
+        },
+      },
+    });
+
+    let mixSpy = jest.spyOn(stylex, 'mix');
+
+    function Comp() {
+      const sx = stylex.useStylex();
+      return <View {...sx.props(styles.view)} />;
+    }
+
+    mockDimensions({ width: 750 });
+    expect(
+      reduceStyles(
+        render(
+          <stylex.RNStyleXProvider media={media}>
+            <Comp />
+          </stylex.RNStyleXProvider>
+        ).toJSON()?.props.style
+      )
+    ).toMatchObject({
+      backgroundColor: 'blue',
+      width: 200,
+    });
+
+    expect(mixSpy?.mock.calls[0][1]).toHaveBeenCalledWith(
+      expect.objectContaining({
+        color: 'red',
+      })
+    );
+    mixSpy.mockRestore();
+  });
 });
 
 // ---------------------------------------------------------------------------
