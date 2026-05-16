@@ -1,25 +1,32 @@
 name: CI
 
 on:
-  pull_request:
-    types: [opened, synchronize]
+  push:
+    branches:
+      - 'main'
+
+permissions:
+  id-token: write # Required for OIDC
+  contents: read
+
 
 jobs:
-  build:
+  publish-npm:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-
-      - uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          fetch-depth: 0 # otherwise, you will failed to push refs to dest repo
 
-      - uses: pnpm/action-setup@v2
-        name: Install pnpm
-        id: pnpm-install
+      - uses: actions/setup-node@v4
         with:
-          version: 7
-          run_install: false
+          node-version: 24
+          registry-url: https://registry.npmjs.org/
+          scope: '@mochi-inc-japan'
+
+      - name: pnpm setup
+        id: pnpm-setup
+        run: corepack enable
 
       - name: Get pnpm store directory
         id: pnpm-cache
@@ -36,13 +43,22 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        run: pnpm install
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Test
-        run: npm run test --ci --coverage --maxWorkers=2
+        run: pnpm install --frozen-lockfile
 
       - name: Build
-        run: npm run build
+        run: pnpm run build
+
+      - name: Github config
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: create and publish versions
+        uses: changesets/action@v1
+        with:
+          commit: 'chore: update versions'
+          title: 'chore: update versions'
+          publish: pnpm publish --provenance
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ''
+          NPM_CONFIG_PROVENANCE: true
