@@ -130,6 +130,7 @@ describe('Variants', () => {
           default: 4,
           round: 8,
           square: 0,
+          test: 1,
         },
         fontSize: {
           default: 14,
@@ -153,6 +154,15 @@ describe('Variants', () => {
         ).style
       )
     ).toMatchObject({ borderRadius: 8, fontSize: 16 });
+    expect(
+      reduceStyles(
+        stylex.props(
+          stylex.mix<Variants<typeof variants>>(styles.view, {
+            shape: 'test',
+          })
+        ).style
+      )
+    ).toMatchObject({ borderRadius: 1, fontSize: 14 });
   });
 });
 

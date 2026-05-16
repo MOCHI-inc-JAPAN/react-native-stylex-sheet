@@ -32,10 +32,15 @@ type ExtractPostFix<T extends string> = T extends `@${string}_${infer PostFix}`
   ? PostFix
   : 'default';
 
+// NOTE: This map for keyof (X | Y) = (keyof X & keyof Y) != (keyof X | keyof Y).
+// different object value is composed to union type and keyof is applied later
+// without explicit individual object evaluation by this utility type.
+type KeysOfUnion<T> = T extends T ? keyof T : never;
+
 export type Variants<
   A extends Record<string, Record<string, Record<string, any>>>
 > = {
-  [key in keyof A]?: ExtractPostFix<Extract<keyof A[key][keyof A[key]], string>>;
+  [key in keyof A]?: ExtractPostFix<Extract<KeysOfUnion<A[key][keyof A[key]]>, string>>;
 };
 
 export type VariantValue<S extends RNStyle = RNStyle> = {
