@@ -1,5 +1,12 @@
 # example
 
+## 1.0.2
+
+### Patch Changes
+
+- Updated dependencies [e9123f3]
+  - @mochi-inc-japan/react-native-stylex-sheet@1.0.1
+
 ## 1.0.1
 
 ### Patch Changes
