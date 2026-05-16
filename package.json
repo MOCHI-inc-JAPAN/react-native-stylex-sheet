@@ -1,7 +1,7 @@
 {
   "name": "@mochi-inc-japan/react-native-stylex-sheet",
   "description": "The modern CSS-in-JS library for React Native",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "license": "MIT",
   "author": "Tkow",
   "repository": "https://github.com/MOCHI-inc-JAPAN/react-native-stylex-sheet",
