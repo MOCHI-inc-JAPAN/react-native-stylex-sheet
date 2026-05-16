@@ -96,7 +96,7 @@ export const createVariants = <A extends VariantArg>(
 };
 
 export const variants = <
-  V extends Record<string, string>,
+  V extends {[key: string]: string | undefined},
   T extends VariantStyleSheet<any, RNStyle> = VariantStyleSheet<any, any>
 >(
   target: T,

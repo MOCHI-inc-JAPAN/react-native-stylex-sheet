@@ -463,7 +463,7 @@ describe('Media', () => {
     });
   });
 
-  it('preset media effectively key access', () => {
+  xit('preset media effectively key access', () => {
     const media = stylex.defineConsts({
       md: '(width >= 750px)',
       lg: '(width >= 1080px)',

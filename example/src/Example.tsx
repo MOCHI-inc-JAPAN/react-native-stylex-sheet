@@ -86,7 +86,7 @@ export default function Example() {
                 ))}
               </Stack>
 
-              <Media color="primary">
+              <Media color={colorMode === 'dark' ? 'secondary' : 'primary'}>
                 Font size should change as viewport changes
               </Media>
 

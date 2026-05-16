@@ -1,8 +1,30 @@
 import { TouchableOpacity } from 'react-native';
-import { create, useStylex } from '@mochi-inc-japan/react-native-stylex-sheet';
-import type { StyleEntry } from '../styles';
+import { create, useStylex, createVariants, type Variants } from '@mochi-inc-japan/react-native-stylex-sheet';
 import { vars } from '../styles';
 import { Text } from './Text';
+
+const buttonVariants = createVariants({
+  variant: {
+    backgroundColor: {
+      primary: vars.primary,
+      secondary: vars.secondary,
+    },
+  },
+  outlinedColor: {
+    borderColor: {
+      primary: vars.primary,
+      secondary: vars.secondary,
+    },
+    backgroundColor: {
+      primary: 'transparent',
+      secondary: 'transparent',
+    },
+  },
+  size: {
+    height: { sm: 32, lg: 44 },
+    paddingHorizontal: { sm: vars.space2, lg: vars.space3 },
+  },
+});
 
 const buttonStyles = create({
   base: {
@@ -10,33 +32,18 @@ const buttonStyles = create({
     alignItems: 'center',
     borderRadius: 999,
     minWidth: 100,
-    backgroundColor: vars.primary,
     elevation: 5,
   },
-  variantPrimary: { backgroundColor: vars.primary },
-  variantSecondary: { backgroundColor: vars.secondary },
-  sizeSm: { height: 32, paddingHorizontal: vars.space2 },
-  sizeLg: { height: 44, paddingHorizontal: vars.space3 },
-  outlined: { borderWidth: 1, elevation: 0 },
-  outlinedPrimary: { borderColor: vars.primary, backgroundColor: 'transparent' },
-  outlinedSecondary: {
-    borderColor: vars.secondary,
-    backgroundColor: 'transparent',
+  button: {
+    ...buttonVariants.variant,
+    ...buttonVariants.outlinedColor,
+    ...buttonVariants.size,
   },
+  outlined: { borderWidth: 1, elevation: 0 },
 });
 
 type ButtonVariant = 'primary' | 'secondary';
 type ButtonSize = 'small' | 'large';
-
-const VARIANT_STYLES: Record<ButtonVariant, StyleEntry> = {
-  primary: buttonStyles.variantPrimary,
-  secondary: buttonStyles.variantSecondary,
-};
-
-const OUTLINED_VARIANT_STYLES: Record<ButtonVariant, StyleEntry> = {
-  primary: buttonStyles.outlinedPrimary,
-  secondary: buttonStyles.outlinedSecondary,
-};
 
 type Props = {
   children: string;
@@ -56,11 +63,12 @@ export function Button({
     <TouchableOpacity
       {...sx.props(
         buttonStyles.base,
-        VARIANT_STYLES[variant],
-        size === 'small' && buttonStyles.sizeSm,
-        size === 'large' && buttonStyles.sizeLg,
-        outlined && buttonStyles.outlined,
-        outlined && OUTLINED_VARIANT_STYLES[variant]
+        sx.mix<Variants<typeof buttonVariants>>(buttonStyles.button, {
+          variant,
+          size: size === 'small' ? 'sm' : 'lg',
+          outlinedColor: outlined ? variant : undefined,
+        }),
+        outlined && buttonStyles.outlined
       )}
     >
       <Text variant="body">{children}</Text>

@@ -1,11 +1,30 @@
 import { Text as RNText, TextProps } from 'react-native';
-import { create, useStylex } from '@mochi-inc-japan/react-native-stylex-sheet';
-import type { StyleEntry } from '../styles';
+import {
+  createVariants,
+  create,
+  useStylex,
+} from '@mochi-inc-japan/react-native-stylex-sheet';
+import type { StyleEntry, Variants } from '../styles';
 import { vars, themes, media } from '../styles';
+
+const variants = createVariants({
+  color: {
+    color: {
+      primary: 'red',
+      secondary: 'blue',
+      third: 'purple',
+      forth: 'green',
+      fifth: 'black',
+    },
+  },
+});
 
 const mediaStyles = create({
   base: {
-    color: { default: vars.text, [themes.dark]: vars.textInverted },
+    color: {
+      default: vars.text,
+      [themes.dark]: 'red',
+    },
     fontSize: {
       default: 16,
       [media.md]: 24,
@@ -26,27 +45,10 @@ const mediaStyles = create({
       [media.xxl]: 32,
     },
   },
-  colorPrimary: { color: 'red' },
-  colorSecondary: { color: 'blue' },
-  colorThird: { color: 'purple' },
-  colorForth: { color: 'green' },
-  colorFifth: { color: 'black' },
+  color: variants.color,
 });
 
-export type MediaColor =
-  | 'primary'
-  | 'secondary'
-  | 'third'
-  | 'forth'
-  | 'fifth';
-
-const COLOR_STYLES: Record<MediaColor, StyleEntry> = {
-  primary: mediaStyles.colorPrimary,
-  secondary: mediaStyles.colorSecondary,
-  third: mediaStyles.colorThird,
-  forth: mediaStyles.colorForth,
-  fifth: mediaStyles.colorFifth,
-};
+export type MediaColor = 'primary' | 'secondary' | 'third' | 'forth' | 'fifth';
 
 type Props = TextProps & {
   color?: MediaColor;
@@ -56,7 +58,9 @@ export function Media({ color, children, ...rest }: Props) {
   const sx = useStylex();
   return (
     <RNText
-      {...sx.props(mediaStyles.base, color && COLOR_STYLES[color])}
+      {...sx.props(
+        sx.mix<Variants<typeof variants>>(mediaStyles.base, { color }),
+      )}
       {...rest}
     >
       {children}
