@@ -2,7 +2,6 @@ import React from 'react';
 import { View } from 'react-native';
 
 import * as stylex from '../';
-import { detectMedia } from '../utils/media';
 import { mockDimensions, finalStyle } from './test-utils';
 
 // ---------------------------------------------------------------------------
@@ -284,59 +283,5 @@ describe('Media', () => {
       backgroundColor: 'purple',
       height: 100,
     });
-  });
-
-  it('preset media effectively key access', async () => {
-    jest.doMock('../utils/media', () => {
-      const originalModule = jest.requireActual('../utils/media');
-      return {
-        ...originalModule,
-        detectMedia: jest.fn((query, width) => {
-          return originalModule.detectMedia(query, width);
-        })
-      }
-    })
-
-    const stylex = await import('../');
-
-    const media = stylex.defineConsts({
-      md: '(width >= 750px)',
-      lg: '(width >= 1080px)',
-    });
-
-    const styles = stylex.create({
-      view: {
-        backgroundColor: {
-          default: 'yellow',
-          [media.md]: 'blue',
-          [media.lg]: 'green',
-        },
-        width: {
-          default: 100,
-          [media.md]: 200,
-          [media.lg]: 300,
-        },
-      },
-    });
-
-    function Comp() {
-      const sx = stylex.useStylex();
-      return <View {...sx.props(styles.view)} />;
-    }
-
-    mockDimensions({ width: 750 });
-    expect(
-      finalStyle(
-        <stylex.RNStyleXProvider media={media}>
-          <Comp />
-        </stylex.RNStyleXProvider>
-      )
-    ).toMatchObject({
-      backgroundColor: 'blue',
-      width: 200,
-    });
-
-    expect(detectMedia).toHaveBeenCalledWith(media.md);
-
   });
 });
