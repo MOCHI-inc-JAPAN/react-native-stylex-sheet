@@ -2,6 +2,7 @@ import React from 'react';
 import { View } from 'react-native';
 
 import * as stylex from '../';
+import { detectMedia } from '../utils/media';
 import { mockDimensions, finalStyle } from './test-utils';
 
 // ---------------------------------------------------------------------------
@@ -285,7 +286,19 @@ describe('Media', () => {
     });
   });
 
-  xit('preset media effectively key access', () => {
+  it('preset media effectively key access', async () => {
+    jest.doMock('../utils/media', () => {
+      const originalModule = jest.requireActual('../utils/media');
+      return {
+        ...originalModule,
+        detectMedia: jest.fn((query, width) => {
+          return originalModule.detectMedia(query, width);
+        })
+      }
+    })
+
+    const stylex = await import('../');
+
     const media = stylex.defineConsts({
       md: '(width >= 750px)',
       lg: '(width >= 1080px)',
@@ -306,8 +319,6 @@ describe('Media', () => {
       },
     });
 
-    let mixSpy = jest.spyOn(stylex, 'mix');
-
     function Comp() {
       const sx = stylex.useStylex();
       return <View {...sx.props(styles.view)} />;
@@ -325,11 +336,7 @@ describe('Media', () => {
       width: 200,
     });
 
-    expect(mixSpy?.mock.calls[0][1]).toHaveBeenCalledWith(
-      expect.objectContaining({
-        color: 'red',
-      })
-    );
-    mixSpy.mockRestore();
+    expect(detectMedia).toHaveBeenCalledWith(media.md);
+
   });
 });

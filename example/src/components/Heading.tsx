@@ -1,16 +1,30 @@
 import { Text as RNText, TextProps } from 'react-native';
-import { create, useStylex, createVariants, type Variants } from '@mochi-inc-japan/react-native-stylex-sheet';
+import { create, useStylex, createVariants, type Variants, defineVars } from '@mochi-inc-japan/react-native-stylex-sheet';
+import { themes } from '../styles';
+
+const defaultColors = defineVars({ h1: 'purple', h2: 'green', h3: 'blue', h4: 'red', h5: 'black' })
 
 const headingVariants = createVariants({
   heading: {
     fontSize: { h1: 40, h2: 24, h3: 20, h4: 17.6, h5: 16 },
-    color: { h1: 'purple', h2: 'green', h3: 'blue', h4: 'red', h5: 'black' },
+    color: defaultColors,
   },
   underlinedHeading: {
-    borderBottomColor: { h1: 'purple', h2: 'green', h3: 'blue', h4: 'red', h5: 'black' },
+    borderBottomColor: defaultColors,
     borderBottomWidth: { h1: 1, h2: 1, h3: 1, h4: 1, h5: 1 },
   },
 });
+
+const darkHeadingVariants = createVariants({
+  heading: { color: { ...defaultColors, h5: 'white' } },
+  underlinedHeading: {
+    borderBottomColor: { ...defaultColors, h5: 'white' },
+  }
+})
+
+const themeOverrides = create({
+  [themes.dark]: {...darkHeadingVariants.heading, ...darkHeadingVariants.underlinedHeading}
+})
 
 const headingStyles = create({
   base: { fontWeight: 'bold', color: 'black' },
@@ -44,8 +58,7 @@ export function Heading({
           heading,
           underlinedHeading: underlined ? heading : undefined,
         }),
-        underlined && headingStyles.underlined,
-        !underlined && heading === 'h1' && headingStyles.defaultH1NoUnderline
+        sx.mix(themeOverrides[sx.theme], {heading, underlinedHeading: underlined ? heading : undefined})
       )}
       {...rest}
     />

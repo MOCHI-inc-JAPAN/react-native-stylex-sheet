@@ -45,9 +45,10 @@ export const mix = <
     RNStyle
   >
 >(
-  target: T | [T, { theme?: Theme; media?: number | string }],
+  target?: T | [T, { theme?: Theme; media?: number | string }],
   variantArgs?: Variants
 ): RNStyle[] => {
+  if (!target) return [];
   const [_target, config] = Array.isArray(target) ? target : [target as T, {}];
   let results = _target.default ? [_target.default] : ([] as RNStyle[]);
   if (config.theme) {

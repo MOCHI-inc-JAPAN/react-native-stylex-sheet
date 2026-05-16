@@ -49,6 +49,7 @@ export const RNStyleXProvider = (
         return props(...sheets);
       },
       mix(arg, variants) {
+        if (!arg) return [];
         const config = {
           theme,
           media: media ?? this.windowWidth,
