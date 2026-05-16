@@ -1,3 +1,5 @@
+import { render } from '@testing-library/react-native';
+
 const aspectRatio = 19.5 / 9; // iPhone 14
 
 export function mockDimensions({
@@ -40,4 +42,12 @@ export function mockDimensions({
 
 export function reduceStyles(s: any) {
   return s.reduce((s1: any, s2: any) => ({ ...s1, ...s2 }), {});
+}
+
+export function finalStyle(Component: React.ReactElement) {
+  return reduceStyles(
+    render(
+      Component
+    ).toJSON()?.props.style
+  );
 }
