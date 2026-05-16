@@ -38,7 +38,7 @@ export const create = <T extends NamedStyles<any, R>, R extends RNStyle>(
 };
 
 export const mix = <
-  Variants extends {[key: string]: string | undefined},
+  Variants extends { [key: string]: string | number | boolean | undefined },
   Theme extends string = string,
   T extends VariantStyleSheet<string, RNStyle> = VariantStyleSheet<
     string,

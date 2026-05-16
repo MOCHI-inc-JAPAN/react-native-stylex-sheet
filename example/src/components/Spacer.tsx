@@ -33,8 +33,10 @@ const spacerVariants = createVariants({
     },
   },
   axis: {
-    height: { x: 'auto' as any },
-    width: { y: 'auto' as any },
+    flexDirection: {
+      x: 'row',
+      y: 'column',
+    },
   },
 });
 

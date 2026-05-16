@@ -1,13 +1,13 @@
-import React, { Fragment } from 'react';
-import { View, ViewStyle } from 'react-native';
 import {
   create,
-  useStylex,
   createVariants,
+  useStylex,
   type Variants,
 } from '@mochi-inc-japan/react-native-stylex-sheet';
-import { Spacer } from './Spacer';
+import React, { Fragment } from 'react';
+import { View, ViewStyle } from 'react-native';
 import type { SpaceKey } from '../styles';
+import { Spacer } from './Spacer';
 import { flattenChildren } from './utils';
 
 const variants = createVariants({

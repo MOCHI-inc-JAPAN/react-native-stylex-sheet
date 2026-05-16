@@ -40,7 +40,10 @@ type KeysOfUnion<T> = T extends T ? keyof T : never;
 export type Variants<
   A extends Record<string, Record<string, Record<string, any>>>
 > = {
-  [key in keyof A]?: ExtractPostFix<Extract<KeysOfUnion<A[key][keyof A[key]]>, string>>;
+  [key in keyof A]?:
+    | number
+    | boolean
+    | ExtractPostFix<Extract<KeysOfUnion<A[key][keyof A[key]]>, string>>;
 };
 
 export type VariantValue<S extends RNStyle = RNStyle> = {
