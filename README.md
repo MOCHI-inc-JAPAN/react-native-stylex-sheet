@@ -10,16 +10,44 @@ npm install @mochi-inc-japan/react-native-stylex-sheet
 
 ## Quick start
 
+### Simple usage (no theme / variants / media)
+
+When you don't need theming, variants, or responsive media queries, use the namespace import:
+
+```tsx
+import * as stylex from '@mochi-inc-japan/react-native-stylex-sheet';
+
+const styles = stylex.create({
+  button: {
+    padding: 16,
+    borderRadius: 8,
+    backgroundColor: '#6200ee',
+  },
+});
+
+function Button() {
+  return (
+    <Pressable {...stylex.props(styles.button)}>
+      <Text>Press me</Text>
+    </Pressable>
+  );
+}
+```
+
+### Advanced usage (theme / variants / media)
+
+When using theming, variants, or responsive breakpoints, wrap the app in `RNStyleXProvider` and use `const stylex = useStylex()` inside components. Theme and media are then applied automatically — only variant selections need to be passed to `mix()`.
+
 ```tsx
 import {
   create,
   createVariants,
   createThemes,
   defineConsts,
-  props,
   useStylex,
   RNStyleXProvider,
 } from '@mochi-inc-japan/react-native-stylex-sheet';
+import type { Variants } from '@mochi-inc-japan/react-native-stylex-sheet';
 
 // 1. Define media breakpoints as constants
 const media = defineConsts({
@@ -62,17 +90,14 @@ function App() {
   );
 }
 
-// 6. Use inside components
-import type { Variants } from '@mochi-inc-japan/react-native-stylex-sheet';
-
-type ButtonVariants = Variants<typeof buttonVariants>;
-
+// 6. Use const stylex = useStylex() inside components
+// — theme and media from RNStyleXProvider are applied automatically in mix()
 function Button({ danger }: { danger?: boolean }) {
-  const sx = useStylex();
+  const stylex = useStylex();
   return (
     <Pressable
-      {...sx.props(
-        sx.mix<Variants<typeof buttonVariants>>(styles.button, { color: danger ? 'danger' : 'default' })
+      {...stylex.props(
+        stylex.mix<Variants<typeof buttonVariants>>(styles.button, { color: danger ? 'danger' : 'default' })
       )}
     >
       <Text>Press me</Text>
@@ -100,19 +125,13 @@ Styles in this library are **variant-keyed objects**. A style property value can
 
 ## Setup pattern
 
-Define shared constants and export them from a single file:
+Define shared constants (media breakpoints and themes) in a single file and export them:
 
 ```ts
-// src/styles/styled.ts
+// src/styles/stylex.ts
 import {
-  create,
   createThemes,
-  createVariants,
   defineConsts,
-  defineVars,
-  props,
-  useStylex,
-  RNStyleXProvider,
 } from '@mochi-inc-japan/react-native-stylex-sheet';
 
 export const media = defineConsts({
@@ -121,14 +140,13 @@ export const media = defineConsts({
 });
 
 export const { themes } = createThemes(['light', 'dark']);
-
-export { create, props, useStylex, RNStyleXProvider, defineConsts, defineVars };
 ```
 
-Components import from this file, not directly from the package:
+Components import shared constants from this file, and other functions directly from the package:
 
 ```tsx
-import { create, useStylex, media, themes } from '../styles/styled';
+import { create, useStylex } from '@mochi-inc-japan/react-native-stylex-sheet';
+import { media, themes } from '../styles/stylex';
 ```
 
 ---
@@ -280,16 +298,16 @@ Props:
 
 ### `useStylex()`
 
-Hook returning `{ props, mix, width, theme }`. Must be used inside `RNStyleXProvider`. `mix` is reactive to the current theme and screen width.
+Hook returning `{ props, mix, width, theme }`. Must be used inside `RNStyleXProvider`. `mix` automatically applies the active theme and screen width from context — only variant selections need to be passed explicitly.
 
 ```tsx
 function Card({ danger }: { danger: boolean }) {
-  const sx = useStylex();
+  const stylex = useStylex();
   return (
-    <View {...sx.props(
-      sx.mix<Variants<typeof cardVariants>>(styles.card, { color: danger ? 'danger' : 'default' })
+    <View {...stylex.props(
+      stylex.mix<Variants<typeof cardVariants>>(styles.card, { color: danger ? 'danger' : 'default' })
     )}>
-      <Text {...sx.props(sx.mix(styles.title))}>Hello</Text>
+      <Text {...stylex.props(stylex.mix(styles.title))}>Hello</Text>
     </View>
   );
 }
@@ -312,8 +330,9 @@ const style = mix(styles.button);
 // With explicit variants
 const style = mix(styles.button, { color: 'danger', size: 'lg' });
 
-// Inside component via useStylex().mix() — theme + media are automatic
-const style = sx.mix(styles.button, { color: 'danger' });
+// Inside component — theme + media from RNStyleXProvider are applied automatically
+const stylex = useStylex();
+const style = stylex.mix(styles.button, { color: 'danger' });
 ```
 
 ---
@@ -324,10 +343,13 @@ Collects style arrays into `{ style: [...] }` to spread on a React Native compon
 
 ```tsx
 // Combine multiple mix() results
-<View {...sx.props(sx.mix(styles.base), sx.mix(styles.override))} />
+function Component() {
+  const stylex = useStylex();
+  return <View {...stylex.props(stylex.mix(styles.base), stylex.mix(styles.override))} />;
+}
 
-// Module-level (non-reactive, default styles only)
-<View {...props(styles.container)} />
+// Module-level (non-reactive, default styles only) — import * as stylex
+<View {...stylex.props(styles.container)} />
 ```
 
 ---
@@ -384,8 +406,8 @@ import type { Variants } from '@mochi-inc-japan/react-native-stylex-sheet';
 type ButtonVariants = Variants<typeof buttonVariants>;
 
 function Button({ color }: { color: ButtonVariants['color'] }) {
-  const sx = useStylex();
-  return <Pressable {...sx.props(sx.mix<ButtonVariants>(styles.button, { color }))} />;
+  const stylex = useStylex();
+  return <Pressable {...stylex.props(stylex.mix<ButtonVariants>(styles.button, { color }))} />;
 }
 ```
 
