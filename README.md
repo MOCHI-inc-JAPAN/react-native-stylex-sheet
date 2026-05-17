@@ -119,7 +119,9 @@ function Button({ danger }: { danger?: boolean }) {
   return (
     <Pressable
       {...stylex.props(
-        stylex.mix<Variants<typeof buttonVariants>>(styles.button, { color: danger ? 'danger' : 'default' })
+        stylex.mix<Variants<typeof buttonVariants>>(styles.button, {
+          color: danger ? 'danger' : 'default',
+        })
       )}
     >
       <Text>Press me</Text>
@@ -139,8 +141,8 @@ stylex.mix<Variants<typeof buttonVariants>>(
     styles.button,
     {
       media: stylex.windowWidth,
-      theme: themes.dark
-    }
+      theme: themes.dark,
+    },
   ],
   { color: danger ? 'danger' : 'default' }
 );
@@ -284,11 +286,11 @@ const buttonVariants = createVariants({
     backgroundColor: {
       default: '#6200ee',
       primary: '#6200ee',
-      danger:  '#b00020',
+      danger: '#b00020',
     },
     borderColor: {
       default: 'transparent',
-      danger:  '#b00020',
+      danger: '#b00020',
     },
   },
   size: {
@@ -317,7 +319,7 @@ import type { Variants } from '@mochi-inc-japan/react-native-stylex-sheet';
 type ButtonVariants = Variants<typeof buttonVariants>;
 // { color: 'primary' | 'danger' | 'default'; size: 'sm' | 'lg' | 'default' }
 
-stylex.mix<Variants<ButtonVariants>>(styles.button, { color, size })
+stylex.mix<Variants<ButtonVariants>>(styles.button, { color, size });
 ```
 
 ---
@@ -335,8 +337,8 @@ Activate a theme by passing its key to `RNStyleXProvider`:
 Creates named theme keys. Returns `{ themes }` where each name maps to an opaque key string used as a style property key in `create()`.
 
 ```tsx
-import * as stylex from '@mochi-inc-japan/react-native-stylex-sheet'
-import { useStylex } from '@mochi-inc-japan/react-native-stylex-sheet'
+import * as stylex from '@mochi-inc-japan/react-native-stylex-sheet';
+import { useStylex } from '@mochi-inc-japan/react-native-stylex-sheet';
 
 const { themes } = stylex.createThemes(['light', 'dark']);
 
@@ -345,27 +347,23 @@ const styles = stylex.create({
     color: {
       default: '#000',
       [themes.light]: '#000',
-      [themes.dark]:  '#fff',
+      [themes.dark]: '#fff',
     },
   },
 });
 
 function App() {
-  const stylex = useStylex()
-  return (
-    <Text {...stylex.props(styles.text)}>
-      Hello World!
-    </Text>
-  )
+  const stylex = useStylex();
+  return <Text {...stylex.props(styles.text)}>Hello World!</Text>;
 }
 ```
 
 When you need to add styles or set different variables per theme, use `stylex.create` and `stylex.props` to override the default style with the style corresponding to the active theme:
 
 ```tsx
-import { View, Text } from 'react-native'
-import * as stylex from '@mochi-inc-japan/react-native-stylex-sheet'
-import { useStylex } from '@mochi-inc-japan/react-native-stylex-sheet'
+import { View, Text } from 'react-native';
+import * as stylex from '@mochi-inc-japan/react-native-stylex-sheet';
+import { useStylex } from '@mochi-inc-japan/react-native-stylex-sheet';
 
 const { themes } = stylex.createThemes(['light', 'dark', 'other']);
 
@@ -373,55 +371,62 @@ const { themes } = stylex.createThemes(['light', 'dark', 'other']);
 const defaultColors = stylex.defineVars({
   primary: 'black',
   danger: 'red',
-})
+});
 
 const variables = stylex.createVariants({
   text: {
-    color: defaultColors
-  }
+    color: defaultColors,
+  },
 });
 
 const styles = stylex.create({
   view: {
     width: '100%',
-    height: '100%'
+    height: '100%',
   },
   text: {
-    ...variables.text
+    ...variables.text,
   },
 });
 
 // Variant style definitions for additional themes
 const darkThemeStyleVariants = stylex.createVariants({
-  text: { color: { ...defaultColors, 'primary': 'white' }, },
-})
+  text: { color: { ...defaultColors, primary: 'white' } },
+});
 
 const otherThemeStyleVariants = stylex.createVariants({
-  text: { color: { ...defaultColors, 'primary': 'blue' }, },
-})
+  text: { color: { ...defaultColors, primary: 'blue' } },
+});
 
 const viewTheme = stylex.create({
   // Additional styles written directly into create
   [themes.dark]: { backgroundColor: 'black' },
   [themes.other]: { backgroundColor: 'gray' },
-})
+});
 
 const textTheme = stylex.create({
-  [themes.dark]: { borderColor: 'white', borderWidth: 1, ...darkThemeStyleVariants.text },
+  [themes.dark]: {
+    borderColor: 'white',
+    borderWidth: 1,
+    ...darkThemeStyleVariants.text,
+  },
   [themes.other]: { ...otherThemeStyleVariants.text },
-})
+});
 
 function App() {
-  const stylex = useStylex()
+  const stylex = useStylex();
   return (
     <View {...stylex.props(styles.view, viewTheme[stylex.theme])}>
       <Text
-        {...stylex.props(styles.text, stylex.mix(textTheme[stylex.theme], { text: 'primary' }))}
+        {...stylex.props(
+          styles.text,
+          stylex.mix(textTheme[stylex.theme], { text: 'primary' })
+        )}
       >
         Hello World!
       </Text>
     </View>
-  )
+  );
 }
 ```
 
@@ -438,6 +443,7 @@ Provider component that supplies `theme` and `windowWidth` (the basis for media 
 ```
 
 Props:
+
 - `theme` — a theme key string from `createThemes()`, or omit for no active theme
 - `windowWidth` — override device width (defaults to `PixelRatio.getPixelSizeForLayoutSize(useWindowDimensions().width)`)
 
@@ -448,23 +454,23 @@ Props:
 Hook returning `{ props, mix, windowWidth, theme }`. Must be used inside `RNStyleXProvider`. `mix` automatically applies the active theme and screen width from context. It can be omitted when no variants are specified, and explicit `width` or `theme` overrides are also supported at the call site.
 
 ```tsx
-import * as stylex from '@mochi-inc-japan/react-native-stylex-sheet'
+import * as stylex from '@mochi-inc-japan/react-native-stylex-sheet';
 
 const { themes } = stylex.createThemes(['light', 'dark']);
 const colors = stylex.defineVars({
   default: '#6200ee',
   primary: '#6200ee',
-  danger:  '#b00020',
-})
+  danger: '#b00020',
+});
 const cardVariants = stylex.createVariants({
   // variant group name: 'bgcolor'
   bgcolor: {
     backgroundColor: colors,
-  }
-})
+  },
+});
 const styles = stylex.create({
   card: {
-    ...cardVariants
+    ...cardVariants,
   },
   title: {
     color: {
@@ -477,14 +483,16 @@ const styles = stylex.create({
     },
     borderRadius: 8,
   },
-})
+});
 
 function Card({ bgcolor }: { bgcolor: keyof typeof colors }) {
   const stylex = useStylex();
   return (
-    <View {...stylex.props(
-      stylex.mix<Variants<typeof cardVariants>>(styles.card, { bgcolor })
-    )}>
+    <View
+      {...stylex.props(
+        stylex.mix<Variants<typeof cardVariants>>(styles.card, { bgcolor })
+      )}
+    >
       {/* theme and media styles for styles.title are applied even without calling stylex.mix */}
       <Text {...stylex.props(styles.title)}>Hello</Text>
     </View>
@@ -493,9 +501,9 @@ function Card({ bgcolor }: { bgcolor: keyof typeof colors }) {
 
 render(
   <stylex.RNStylexProvider theme={themes.dark}>
-    <Card bgcolor='primary' />
+    <Card bgcolor="primary" />
   </stylex.RNStylexProvider>
-)
+);
 ```
 
 ---
@@ -530,7 +538,7 @@ const style = stylex.mix(
     {
       media: media.md, // force a specific media match (or pass a numeric width)
       theme: themes.dark, // force a specific theme key
-    }
+    },
   ],
   { color: 'danger' }
 );
@@ -546,11 +554,15 @@ Collects style arrays into `{ style: [...] }` to spread on a React Native compon
 // Combine multiple mix() results
 function Component() {
   const stylex = useStylex();
-  return <View {...stylex.props(stylex.mix(styles.base), stylex.mix(styles.override))} />;
+  return (
+    <View
+      {...stylex.props(stylex.mix(styles.base), stylex.mix(styles.override))}
+    />
+  );
 }
 
 // Module-level (non-reactive, default styles only) — import * as stylex
-<View {...stylex.props(styles.container)} />
+<View {...stylex.props(styles.container)} />;
 ```
 
 ---
@@ -559,11 +571,11 @@ function Component() {
 
 Media query strings are used directly as style property keys. The string must match one of the supported range formats:
 
-| Format | Example |
-|---|---|
-| Lower bound | `(width >= 750px)` / `(width > 750px)` |
+| Format      | Example                                  |
+| ----------- | ---------------------------------------- |
+| Lower bound | `(width >= 750px)` / `(width > 750px)`   |
 | Upper bound | `(width <= 1080px)` / `(width < 1080px)` |
-| Range | `(750px <= width < 1080px)` |
+| Range       | `(750px <= width < 1080px)`              |
 
 **Key ordering matters:** later matching keys overwrite earlier ones, so put more specific queries last.
 
@@ -588,12 +600,48 @@ const styles = create({
 
 ## Limitations
 
+Sometimes, you encounter components, which deny array style value like TouchableOpacity or have special style key like "containerStyle" of ScrollView.
+There are two solutions.
+
+1. Use "default" key of `stylex.create` result properties when the style has no theme and media query and variant. The value of it is RNStyle Object to which is not applied any overwritten by them.
+
+```tsx
+const styles = stylex.create({
+  scroll: {
+    width: 100
+  }
+})
+
+<ViewScroll contentContainerStyle={styles.scroll.default}>
+```
+
+2. Use `stylex.flatten()` with `stylex.mix()` when you want to merge all to overwrite default styles.
+
+```tsx
+const styles = stylex.create({
+  touch: {
+    width: 100
+    ...styles.createVariants({
+      h: {
+        height: {
+          md: 100,
+          lg: 200
+        }
+      }
+    })
+  }
+})
+
+const stylex = useStylex()
+<TouchableOpacity style={stylex.flatten(stylex.mix(styles.touch, {h: 'mg'}))} >
+```
+
 React Native has no CSS cascade, inheritance, keyframes, pseudo-elements, or global styles — these features are absent by design.
 
-| Not supported | Alternative |
-|---|---|
-| CSS variables | Use `defineVars()` / `defineConsts()` for shared values |
-| `shadows` token scale | iOS/Android have incompatible shadow APIs — define shadow styles directly |
-| `transitions` | Use [Animated API](https://reactnative.dev/docs/animated) or [react-native-reanimated](https://github.com/software-mansion/react-native-reanimated) |
-| Global styles | Not applicable to React Native |
-| Pseudo-classes / elements | Not applicable to React Native |
+| Not supported             | Alternative                                                                                                                                         |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CSS variables             | Use `defineVars()` / `defineConsts()` for shared values                                                                                             |
+| `shadows` token scale     | iOS/Android have incompatible shadow APIs — define shadow styles directly                                                                           |
+| `transitions`             | Use [Animated API](https://reactnative.dev/docs/animated) or [react-native-reanimated](https://github.com/software-mansion/react-native-reanimated) |
+| Global styles             | Not applicable to React Native                                                                                                                      |
+| Pseudo-classes / elements | Not applicable to React Native                                                                                                                      |

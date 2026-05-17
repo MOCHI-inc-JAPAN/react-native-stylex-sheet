@@ -64,6 +64,12 @@ export const mix = <
   return results;
 };
 
+export const flatten =  <T extends RNStyle>(
+  ...args: (PropValue | RNStyle[] | false | null | undefined)[]
+): T => {
+  return StyleSheet.flatten(props(...args).style) as T;
+};
+
 type PropValue = VariantStyleSheet<string, RNStyle> | RNStyle;
 export const props = <T extends RNStyle>(
   ...args: (PropValue | RNStyle[] | false | null | undefined)[]

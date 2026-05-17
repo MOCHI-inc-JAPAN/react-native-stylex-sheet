@@ -1,6 +1,6 @@
 import { render } from '@testing-library/react-native';
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import * as stylex from '../';
 import { Variants } from '../utils/types';
@@ -57,6 +57,60 @@ describe('Basic', () => {
       orgStyles.view,
       orgStyles.view2,
     ]);
+  });
+
+  it('stylex.flatten() has backward compatibility on StyleSheet', () => {
+    const sameArgs = {
+      view: { backgroundColor: 'red', height: 100, width: 100 },
+      view2: { height: 200, width: 200 },
+    };
+    const styles = stylex.create(sameArgs);
+
+    const orgStyles = StyleSheet.create(sameArgs);
+
+    expect(stylex.flatten(styles.view, styles.view2)).toMatchObject(
+      StyleSheet.flatten([orgStyles.view, orgStyles.view2])
+    );
+  });
+  it('useStylex().flatten() can be used with TouchOpacity', () => {
+    const variants = stylex.createVariants({
+      shape: {
+        borderRadius: {
+          round: 8,
+        },
+      },
+    });
+
+    const styles = stylex.create({
+      op: {
+        backgroundColor: 'red',
+        height: 100,
+        width: 100,
+        ...variants.shape,
+      },
+    });
+
+    function Comp() {
+      const sx = stylex.useStylex();
+      return (
+        <View style={sx.flatten(sx.mix(styles.op, { shape: 'round' }))}>
+          <Text>test</Text>
+        </View>
+      );
+    }
+
+    expect(
+      render(
+        <stylex.RNStyleXProvider>
+          <Comp />
+        </stylex.RNStyleXProvider>
+      ).toJSON()?.props.style
+    ).toMatchObject({
+      backgroundColor: 'red',
+      height: 100,
+      width: 100,
+      borderRadius: 8,
+    });
   });
 });
 

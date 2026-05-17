@@ -1,4 +1,4 @@
-export { create, props, mix } from './utils/base';
+export { create, props, mix, flatten } from './utils/base';
 export { createVariants } from './utils/variant';
 export { defineConsts, defineVars } from './utils/tokens';
 export { useStylex, RNStyleXProvider } from './utils/hooks';

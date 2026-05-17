@@ -6,13 +6,14 @@ import {
   useMemo,
 } from 'react';
 import { PixelRatio, useWindowDimensions } from 'react-native';
-import { mix, props } from './base';
+import { flatten, mix, props } from './base';
 import { RNStyle, VariantStyleSheet } from './types';
 import { detectMedia } from './media';
 
 type IApi = {
   props: typeof props;
   mix: typeof mix;
+  flatten: typeof flatten;
 };
 
 type UserConfig = {
@@ -47,6 +48,14 @@ export const RNStyleXProvider = (
             : v && this.mix(v as VariantStyleSheet<string, RNStyle>)
         );
         return props(...sheets);
+      },
+      flatten(...args) {
+        const sheets = args.map((v) =>
+          Array.isArray(v)
+            ? v
+            : v && this.mix(v as VariantStyleSheet<string, RNStyle>)
+        );
+        return flatten(...sheets);
       },
       mix(arg, variants) {
         if (!arg) return [];
