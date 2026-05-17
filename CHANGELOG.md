@@ -1,5 +1,11 @@
 # @mochi-inc-japan/react-native-stylex-sheet
 
+## 1.0.2
+
+### Patch Changes
+
+- b408a8e: flatten api を追加
+
 ## 1.0.1
 
 ### Patch Changes
