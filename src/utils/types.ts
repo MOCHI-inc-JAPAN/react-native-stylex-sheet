@@ -6,7 +6,7 @@ export type RNStyle = StyleObject[string];
 export type VariantStyle<S> = { [key: string]: S };
 export type VariantStyleSheet<Key extends string, S extends RNStyle> = {
   [key in Key]: S;
-};
+} & { default: S; };
 
 export type XRNStyle<S extends RNStyle = RNStyle> = {
   [key in keyof S]: VariantStyle<S[key]> | S[key];

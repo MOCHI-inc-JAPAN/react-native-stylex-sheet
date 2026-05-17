@@ -28,7 +28,7 @@ function bundleStyleSheet<S extends RNStyle>(styleObject: XRNStyle<S>) {
   return StyleSheet.create(result);
 }
 
-export const create = <T extends NamedStyles<any, R>, R extends RNStyle>(
+export const create = <const T extends NamedStyles<any, R>, R extends RNStyle>(
   args: T
 ): XRNStyleSheets<T, R> => {
   return Object.entries(args).reduce((current, [key, value]) => {
