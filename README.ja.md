@@ -548,7 +548,7 @@ const style = stylex.mix(
 
 ### `props(...args)`
 
-スタイル配列を React Native コンポーネントにスプレッドするための `{ style: [...] }` `RNStyle[]` 配列、またはプレーンなスタイルオブジェクトを受け取ります。
+スタイル配列を React Native コンポーネントにスプレッドするための `{ style: [...] }` を返します。`RNStyle[]` 配列またはプレーンなスタイルオブジェクトを受け取ります。
 
 ```tsx
 // 複数の mix() 結果を結合
@@ -559,6 +559,28 @@ function Component() {
 
 // モジュールレベル（非リアクティブ、デフォルトスタイルのみ）— import * as stylex
 <View {...stylex.props(styles.container)} />
+```
+
+---
+
+### `flatten(...args)`
+
+`props()` と同じシグネチャでスタイル配列を受け取り、`StyleSheet.flatten()` を通じて単一の `RNStyle` オブジェクトを返します。`TouchableOpacity` の `style` や `ScrollView` の `contentContainerStyle` など、配列形式のスタイルを受け付けないコンポーネントに使用します。
+
+```tsx
+// モジュールレベル（非リアクティブ、デフォルトスタイルのみ）
+<TouchableOpacity style={stylex.flatten(styles.button)} />
+
+// コンポーネント内 — RNStyleXProvider のテーマ・メディアが自動適用される
+const stylex = useStylex();
+<TouchableOpacity
+  style={stylex.flatten(stylex.mix(styles.button, { color: 'danger' }))}
+/>
+
+// 複数エントリを一つのオブジェクトにマージ
+<ScrollView
+  contentContainerStyle={stylex.flatten(styles.container, styles.padding)}
+/>
 ```
 
 ---
@@ -596,6 +618,44 @@ const styles = create({
 ---
 
 ## 制限事項
+
+`TouchableOpacity` のようにスタイルに配列を受け付けないコンポーネントや、`ScrollView` の `contentContainerStyle` のような特殊なスタイルキーを持つコンポーネントに遭遇することがあります。
+その場合、以下の2つの解決策があります。
+
+1. テーマ・メディアクエリ・バリアントを使わないスタイルの場合は、`stylex.create` の結果プロパティの `"default"` キーを使います。この値はいかなるオーバーライドも適用されていない `RNStyle` オブジェクトです。
+
+```tsx
+const styles = stylex.create({
+  scroll: {
+    width: 100,
+  },
+});
+
+<ScrollView contentContainerStyle={styles.scroll.default} />;
+```
+
+2. デフォルトスタイルにバリアント・テーマ・メディアを適用した結果を1つのオブジェクトにマージしたい場合は、`stylex.flatten()` と `stylex.mix()` を組み合わせます。
+
+```tsx
+const variants = createVariants({
+  h: {
+    height: {
+      default: 100,
+      lg: 200,
+    },
+  },
+});
+
+const styles = stylex.create({
+  touch: {
+    width: 100,
+    ...variants.h,
+  },
+});
+
+const stylex = useStylex();
+<TouchableOpacity style={stylex.flatten(stylex.mix(styles.touch, { h: 'lg' }))} />;
+```
 
 React Native には CSS カスケード、継承、キーフレーム、疑似要素、グローバルスタイルがありません。これらの機能は設計上サポートされていません。
 

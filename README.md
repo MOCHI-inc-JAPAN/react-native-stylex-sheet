@@ -567,6 +567,28 @@ function Component() {
 
 ---
 
+### `flatten(...args)`
+
+Same signature as `props()` but returns a single merged `RNStyle` object via `StyleSheet.flatten()`. Use when a component's style prop does not accept an array — for example `TouchableOpacity`'s `style` or `ScrollView`'s `contentContainerStyle`.
+
+```tsx
+// Module-level (non-reactive, default styles only)
+<TouchableOpacity style={stylex.flatten(styles.button)} />
+
+// Inside component — theme + media from RNStyleXProvider applied automatically
+const stylex = useStylex();
+<TouchableOpacity
+  style={stylex.flatten(stylex.mix(styles.button, { color: 'danger' }))}
+/>
+
+// Merge multiple entries into one object
+<ScrollView
+  contentContainerStyle={stylex.flatten(styles.container, styles.padding)}
+/>
+```
+
+---
+
 ## Media queries
 
 Media query strings are used directly as style property keys. The string must match one of the supported range formats:
