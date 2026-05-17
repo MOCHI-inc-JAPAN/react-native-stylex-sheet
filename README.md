@@ -2,6 +2,12 @@
 
 A lightweight, fast CSS-in-JS library for React Native. It maintains backward compatibility with React Native's standard `StyleSheet` CSS syntax while adding extensions such as themes and variants that are not natively supported. The goal is to provide an interface as compatible as possible with [stylexjs](https://stylexjs.com/docs/learn/recipes/variants/) on the web, simplifying cross-platform development. Because only React Native and React are peer dependencies, components built with this library can run as-is on react-native-web, as long as they don't include code that depends on native APIs or device-specific behavior.
 
+## Benchmark
+
+[Benchmark Test Code](https://github.com/tkow/react-native-stylesheet-benchmark)
+
+![img.png](./docs/output.png)
+
 ## Installation
 
 ```sh
