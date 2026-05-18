@@ -16,6 +16,7 @@ Top two libraries are used in the theoretically fastest way, so the results may 
 
 The bundle sizes by esbuild:
 
+```txt
   ┌────────────────────────────────────────────┬───────────┬─────────────┐
   │                  Library                   │ Minified  │ Min+Gzipped │
   ├────────────────────────────────────────────┼───────────┼─────────────┤
@@ -37,7 +38,7 @@ The bundle sizes by esbuild:
   ├────────────────────────────────────────────┼───────────┼─────────────┤
   │ @gluestack-style/react                     │ 135.18 KB │ 41.61 KB    │
   └────────────────────────────────────────────┴───────────┴─────────────┘
-
+```
 
 ## Installation
 
