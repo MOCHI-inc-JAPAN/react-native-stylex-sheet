@@ -117,13 +117,13 @@ const styles = stylex.create({
 
 console.log(styles.featureIcon['default']);
 
-const { themes, defineThemes } = stylex.createThemes(['light', 'dark']);
+const { themes, defineThemes, themeStyleSheets } = stylex.createThemes(['light', 'dark']);
 
 const font = stylex.defineVars({
   size: 12,
 });
 
-const themeStyle = stylex.create<TextStyle>({
+const themeStyle = defineThemes<TextStyle>({
   [themes.light]: {
     color: 'red',
     fontWeight: 'bold',
@@ -131,25 +131,19 @@ const themeStyle = stylex.create<TextStyle>({
   },
 });
 
-const a = defineThemes({
+const themeStyles = themeStyleSheets({
   [themes.light]: {
-    alignContent: {
-
-    },
-    alignSelf: 'auto'
+    color: 'red',
+    fontWeight: 'bold',
+    fontSize: font.size,
   },
-  [themes.dark]: {
-    color: 'blue',
-
-  },
-})
-
+});
 
 export const ThemeReactNativeStylexSheet = (props: any) => {
   const stylex = useStylex();
   return createElement(
     Text,
-    { style: themeStyle[stylex.theme].default },
+    { style: themeStyle[stylex.theme].default || themeStyles[stylex.theme] },
     Children.only(props.children)
   );
 };

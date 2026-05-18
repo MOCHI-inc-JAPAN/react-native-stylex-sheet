@@ -16,7 +16,13 @@ export const isXRNStyle = (style: any): style is XRNStyle<RNStyle> => {
   return style && style[__isXRNStyle];
 }
 
-function bundleStyleSheet<S extends RNStyle>(styleObject: XRNStyle<S>): S & { [key in symbol]: true} {
+type BundleStyleSheet<S extends XRNStyle<any>>  = StyleSheet.NamedStyles<
+  Record<keyof S, RNStyle>
+>
+
+function bundleStyleSheet<S extends RNStyle>(
+  styleObject: XRNStyle<S>
+): BundleStyleSheet<typeof styleObject> & { [key in symbol]: true} {
   const result = Object.entries(styleObject).reduce((current, [key, value]) => {
     if (typeof value === 'object') {
       Object.entries(value).forEach(([variantKey, variantValue]) => {
@@ -33,7 +39,7 @@ function bundleStyleSheet<S extends RNStyle>(styleObject: XRNStyle<S>): S & { [k
   }, {} as Record<string, RNStyle>);
   const bundled = StyleSheet.create(result);
   (bundled as any)[__isXRNStyle] = true;
-  return bundled as S & { [key in symbol]: true };
+  return bundled as BundleStyleSheet<typeof styleObject> & { [key in symbol]: true };
 }
 
 export const create = <R extends RNStyle, const T extends NamedStyles<any, R> = NamedStyles<any, R>>(
@@ -42,7 +48,7 @@ export const create = <R extends RNStyle, const T extends NamedStyles<any, R> = 
   return Object.entries(args).reduce((current, [key, value]) => {
     (current as any)[key] = bundleStyleSheet(value);
     return current;
-  }, {} as XRNStyleSheets<T, R>);
+  }, {}) as XRNStyleSheets<T, R>;
 };
 
 export const mix = <
@@ -73,14 +79,14 @@ export const mix = <
 };
 
 export const flatten =  <T extends RNStyle>(
-  ...args: (PropValue | RNStyle[] | false | null | undefined)[]
+  ...args: (PropValue | RNStyle[])[]
 ): T => {
   return StyleSheet.flatten(props(...args).style) as T;
 };
 
-type PropValue = VariantStyleSheet<string, RNStyle> | RNStyle;
+type PropValue = false | null | undefined |VariantStyleSheet<string, RNStyle> | RNStyle;
 export const props = <T extends RNStyle>(
-  ...args: (PropValue | RNStyle[] | false | null | undefined)[]
+  ...args: (PropValue | RNStyle[])[]
 ): { style: T[] } => {
   return {
     style: args.reduce((acc: T[], arg) => {

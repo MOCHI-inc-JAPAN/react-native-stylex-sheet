@@ -376,7 +376,7 @@ import { View, Text } from 'react-native'
 import * as stylex from '@mochi-inc-japan/react-native-stylex-sheet'
 import { useStylex } from '@mochi-inc-japan/react-native-stylex-sheet'
 
-const { themes, defineThemes } = stylex.createThemes(['light', 'dark', 'other']);
+const { themes, defineThemes, themeStyleSheets } = stylex.createThemes(['light', 'dark', 'other']);
 
 // defaultのスタイル定義
 const defaultColors = stylex.defineVars({
@@ -422,16 +422,24 @@ const textTheme = defineThemes({
   [themes.other]: {...otherThemeStyleVariants.text}
 })
 
+// NOTE: themeStyleSheetsはパフォーマンスを上げたりstyle propertyに直接指styleを指定できるstyle sheetのobjectを取得できます。
+const touchableTheme= themeStyleSheets({
+  [themes.dark]: { color: 'red'}
+  [themes.other]: { color: 'blue'}
+});
+
 function App () {
   const stylex = useStylex()
   return (
     <View {...stylex.props(styles.view, viewTheme[stylex.theme])}>
-      <Text
-        /* */
-        {...stylex.props(styles.text, stylex.mix(textTheme[stylex.theme], { text: 'primary' }))}
-      >
-        Hello World!
-      </Text>
+      <TouchableOpacity style={touchableTheme[themes.theme]}>
+        <Text
+          /* */
+          {...stylex.props(styles.text, stylex.mix(textTheme[stylex.theme], { text: 'primary' }))}
+        >
+          Hello World!
+        </Text>
+      </TouchableOpacity>
     </View>
   )
 }

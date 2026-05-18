@@ -364,14 +364,14 @@ function App() {
 }
 ```
 
-When you need to add styles or set different variables per theme, use `stylex.create` and `stylex.props` to override the default style with the style corresponding to the active theme:
+When you need to add styles or set different variables per theme, use `stylex.create` or `createThemes().defineThemes` and `stylex.props` to override the default style with the style corresponding to the active theme:
 
 ```tsx
 import { View, Text } from 'react-native';
 import * as stylex from '@mochi-inc-japan/react-native-stylex-sheet';
 import { useStylex } from '@mochi-inc-japan/react-native-stylex-sheet';
 
-const { themes } = stylex.createThemes(['light', 'dark', 'other']);
+const { themes, defineThemes, themeStyleSheets } = stylex.createThemes(['light', 'dark', 'other']);
 
 // Default style definitions
 const defaultColors = stylex.defineVars({
@@ -410,7 +410,8 @@ const viewTheme = stylex.create({
   [themes.other]: { backgroundColor: 'gray' },
 });
 
-const textTheme = stylex.create({
+// NOTE: defineThemes is an alias for create, but provides type checking for undefined theme keys.
+const textTheme = defineThemes({
   [themes.dark]: {
     borderColor: 'white',
     borderWidth: 1,
@@ -419,18 +420,27 @@ const textTheme = stylex.create({
   [themes.other]: { ...otherThemeStyleVariants.text },
 });
 
+// NOTE: themeStyleSheets returns a plain StyleSheet object keyed by theme, for improved performance
+// and for passing styles directly to props that don't accept arrays (e.g. TouchableOpacity).
+const touchableTheme = themeStyleSheets({
+  [themes.dark]: { color: 'red' },
+  [themes.other]: { color: 'blue' },
+});
+
 function App() {
   const stylex = useStylex();
   return (
     <View {...stylex.props(styles.view, viewTheme[stylex.theme])}>
-      <Text
-        {...stylex.props(
-          styles.text,
-          stylex.mix(textTheme[stylex.theme], { text: 'primary' })
-        )}
-      >
-        Hello World!
-      </Text>
+      <TouchableOpacity style={touchableTheme[stylex.theme]}>
+        <Text
+          {...stylex.props(
+            styles.text,
+            stylex.mix(textTheme[stylex.theme], { text: 'primary' })
+          )}
+        >
+          Hello World!
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 }
