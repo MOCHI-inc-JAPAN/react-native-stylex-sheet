@@ -44,7 +44,7 @@ A style property value can be a plain React Native value or a **variant-keyed ob
 | Key form | When it applies |
 |---|---|
 | `'default'` | Always (the base value) |
-| `'(width >= 750px)'` | When screen width matches the media range |
+| `'@(width >= 750px)'` | When screen width matches the media range |
 | `themes.dark` (e.g. `'@@theme_dark'`) | When that theme is active in `RNStyleXProvider` |
 | `'@color_danger'` (from `createVariants`) | When that variant is selected via `mix()` |
 
@@ -53,8 +53,8 @@ A style property value can be a plain React Native value or a **variant-keyed ob
 ```tsx
 // module level
 const media = defineConsts({
-  md: '(width >= 750px)',
-  lg: '(width >= 1080px)',
+  md: '@(width >= 750px)',
+  lg: '@(width >= 1080px)',
 });
 
 const { themes } = createThemes(['light', 'dark']);
@@ -165,13 +165,13 @@ For the static `props()`, no theme or media resolution occurs — only the `defa
 
 - Variant keys from `createVariants`: `@<groupName>_<variantValue>` (e.g. `@color_danger`)
 - Theme keys from `createThemes`: `@@theme_<themeName>` (e.g. `@@theme_dark`)
-- Media keys: the raw CSS range query string (e.g. `(width >= 750px)`)
+- Media keys: the raw CSS range query string (e.g. `@(width >= 750px)`)
 
 ### Media query matching (`media.ts`)
 
 `matchMediaRangeQuery(key, windowWidth)` supports:
-- `(width >= Npx)` / `(width > Npx)` / `(width <= Npx)` / `(width < Npx)`
-- `(Apx <= width < Bpx)` and similar range forms
+- `@(width >= Npx)` / `@(width > Npx)` / `@(width <= Npx)` / `@(width < Npx)`
+- `@(Apx <= width < Bpx)` and similar range forms
 
 Non-matching keys (e.g. variant keys, theme keys) simply return `false` and are skipped.
 

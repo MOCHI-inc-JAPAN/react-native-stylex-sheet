@@ -79,8 +79,8 @@ import type { Variants } from '@mochi-inc-japan/react-native-stylex-sheet';
 
 // 1. Define media breakpoints as constants
 const media = defineConsts({
-  md: '(width >= 750px)',
-  lg: '(width >= 1080px)',
+  md: '@(width >= 750px)',
+  lg: '@(width >= 1080px)',
 });
 
 // 2. Define themes
@@ -212,8 +212,8 @@ import {
 } from '@mochi-inc-japan/react-native-stylex-sheet';
 
 export const media = defineConsts({
-  md: '(width >= 750px)',
-  lg: '(width >= 1080px)',
+  md: '@(width >= 750px)',
+  lg: '@(width >= 1080px)',
 });
 
 export const fontSize = defineConsts({
@@ -235,8 +235,8 @@ Returns a frozen copy of the given object. Use for module-level constants such a
 
 ```ts
 const media = defineConsts({
-  md: '(width >= 750px)',
-  lg: '(width >= 1080px)',
+  md: '@(width >= 750px)',
+  lg: '@(width >= 1080px)',
 });
 ```
 
@@ -544,8 +544,8 @@ const stylex = useStylex();
 const style = stylex.mix(styles.button, { color: 'danger' });
 
 const media = defineConsts({
-  md: '(width >= 750px)',
-  lg: '(width >= 1080px)',
+  md: '@(width >= 750px)',
+  lg: '@(width >= 1080px)',
 });
 
 const style = stylex.mix(
@@ -611,16 +611,16 @@ Media query strings are used directly as style property keys. The string must ma
 
 | Format      | Example                                  |
 | ----------- | ---------------------------------------- |
-| Lower bound | `(width >= 750px)` / `(width > 750px)`   |
-| Upper bound | `(width <= 1080px)` / `(width < 1080px)` |
-| Range       | `(750px <= width < 1080px)`              |
+| Lower bound | `@(width >= 750px)` / `@(width > 750px)`   |
+| Upper bound | `@(width <= 1080px)` / `@(width < 1080px)` |
+| Range       | `@(750px <= width < 1080px)`              |
 
 **Key ordering matters:** later matching keys overwrite earlier ones, so put more specific queries last.
 
 ```ts
 const media = defineConsts({
-  md: '(width >= 750px)',
-  lg: '(width >= 1080px)', // more specific — put last
+  md: '@(width >= 750px)',
+  lg: '@(width >= 1080px)', // more specific — put last
 });
 
 const styles = create({
