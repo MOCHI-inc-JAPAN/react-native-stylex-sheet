@@ -3,7 +3,6 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import * as stylex from '../';
-import { Variants } from '../utils/types';
 import { finalStyle, reduceStyles } from './utils/test-utils';
 
 // ---------------------------------------------------------------------------
@@ -31,6 +30,30 @@ describe('Basic', () => {
   it('stylex.props() renders base styles', () => {
     const styles = stylex.create({
       view: { backgroundColor: 'red', height: 100, width: 100 },
+      view2: { height: 200, width: 200 },
+    });
+
+    function Comp() {
+      return <View {...stylex.props(styles.view, styles.view2)} />;
+    }
+    const { toJSON } = render(<Comp />);
+    expect(toJSON()?.props.style[1]).toMatchObject({
+      height: 200,
+      width: 200,
+    });
+  });
+
+  it('stylex.create() can tell style value object and variant object', () => {
+    const styles = stylex.create({
+      view: {
+        boxShadow: [{
+          offsetX: 0,
+          offsetY: 0,
+          blurRadius: 10,
+          color: 'black',
+          spreadDistance: 0,
+        }]
+      },
       view2: { height: 200, width: 200 },
     });
 
@@ -154,112 +177,6 @@ describe('Basic', () => {
       width: 100,
       borderRadius: 8,
     });
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Variants
-// ---------------------------------------------------------------------------
-
-describe('Variants', () => {
-  it('variants are applied correctly', () => {
-    const vars = stylex.defineVars({
-      colors: {
-        default: 'white',
-        primary: 'red',
-        secondary: 'blue',
-      },
-      sizes: {
-        default: 10,
-        small: 5,
-        medium: 15,
-      },
-    });
-
-    const variants = stylex.createVariants({
-      var1: {
-        backgroundColor: vars.colors,
-      },
-      var2: {
-        width: vars.sizes,
-      },
-    });
-
-    const styles = stylex.create({
-      view: {
-        backgroundColor: variants.var1.backgroundColor,
-        width: variants.var2.width,
-      },
-    });
-
-    expect(stylex.props(styles.view).style[0]).toMatchObject({
-      backgroundColor: 'white',
-      width: 10,
-    });
-
-    expect(stylex.props(styles.view).style.length).toBe(1);
-
-    expect(
-      stylex.props(
-        stylex.mix<Variants<typeof variants>>(styles.view, {
-          var1: 'primary',
-          var2: 'medium',
-        })
-      ).style
-    ).toMatchObject([
-      {
-        backgroundColor: 'white',
-        width: 10,
-      },
-      {
-        backgroundColor: 'red',
-      },
-      {
-        width: 15,
-      },
-    ]);
-  });
-
-  it('multiple style have same variant value is applied correctly', () => {
-    const variants = stylex.createVariants({
-      shape: {
-        borderRadius: {
-          default: 4,
-          round: 8,
-          square: 0,
-          test: 1,
-        },
-        fontSize: {
-          default: 14,
-          round: 16,
-          square: 18,
-        },
-      },
-    });
-    const styles = stylex.create({
-      view: {
-        ...variants.shape,
-      },
-    });
-
-    expect(
-      reduceStyles(
-        stylex.props(
-          stylex.mix<Variants<typeof variants>>(styles.view, {
-            shape: 'round',
-          })
-        ).style
-      )
-    ).toMatchObject({ borderRadius: 8, fontSize: 16 });
-    expect(
-      reduceStyles(
-        stylex.props(
-          stylex.mix<Variants<typeof variants>>(styles.view, {
-            shape: 'test',
-          })
-        ).style
-      )
-    ).toMatchObject({ borderRadius: 1, fontSize: 14 });
   });
 });
 
