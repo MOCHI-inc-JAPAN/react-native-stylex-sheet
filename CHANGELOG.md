@@ -1,5 +1,11 @@
 # @mochi-inc-japan/react-native-stylex-sheet
 
+## 1.0.3
+
+### Patch Changes
+
+- 2439473: fix: useStylex dynamic style and add tests and defineThemes api.
+
 ## 1.0.2
 
 ### Patch Changes
