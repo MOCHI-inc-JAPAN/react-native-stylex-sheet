@@ -4,9 +4,15 @@ A lightweight, fast CSS-in-JS library for React Native. It maintains backward co
 
 ## Benchmark
 
+Here is styling benchmark to use dynamic theme.
+
 [Benchmark Test Code](https://github.com/tkow/react-native-stylesheet-benchmark)
 
 ![img.png](./docs/output.png)
+
+The reason why REACT_NATIVE_STYLE is not fastest is that it uses dynamic object style instead of StyleSheet cached.
+If it has cache with `StyleSheet.create`, of course, fastest or same level of the other two libraries faster than it.
+Top two libraries are used in the theoretically fastest way, so the results may vary depending on the execution environment or randomly.
 
 ## Installation
 
