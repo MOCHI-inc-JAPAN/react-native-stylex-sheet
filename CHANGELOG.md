@@ -1,5 +1,11 @@
 # @mochi-inc-japan/react-native-stylex-sheet
 
+## 1.1.0
+
+### Minor Changes
+
+- 3d5d921: fix: style object value and change media format
+
 ## 1.0.3
 
 ### Patch Changes
