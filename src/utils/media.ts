@@ -24,7 +24,7 @@ export const media = <T extends VariantStyleSheet<string, RNStyle>>(
 };
 
 // NOTE: input mediaKeys
-// - ['(750px <= width < 1080px)', '(width > 750px)']
+// - ['@(750px <= width < 1080px)', '@(width > 750px)']
 export const detectMedia = (
   mediaKeys: string[] | Record<string, string>,
   width: number
@@ -46,8 +46,8 @@ export function matchMediaRangeQuery(
   query: string,
   windowWidth: number
 ): boolean {
-  const singleRangeRegex = /^\(width\s+([><=]+)\s+([0-9]+)px\)$/;
-  const multiRangeRegex = /^\(([0-9]+)px\s([><=]+)\swidth\s+([><=]+)\s+([0-9]+)px\)$/; // prettier-ignore
+  const singleRangeRegex = /^@\(width\s+([><=]+)\s+([0-9]+)px\)$/;
+  const multiRangeRegex = /^@\(([0-9]+)px\s([><=]+)\swidth\s+([><=]+)\s+([0-9]+)px\)$/; // prettier-ignore
   const singleRangeMatches = query.match(singleRangeRegex);
   const multiRangeMatches = query.match(multiRangeRegex);
 

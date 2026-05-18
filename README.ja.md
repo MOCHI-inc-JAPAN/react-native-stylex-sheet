@@ -79,8 +79,8 @@ import type { Variants } from '@mochi-inc-japan/react-native-stylex-sheet';
 
 // 1. メディアブレークポイントを定数として定義
 const media = defineConsts({
-  md: '(width >= 750px)',
-  lg: '(width >= 1080px)',
+  md: '@(width >= 750px)',
+  lg: '@(width >= 1080px)',
 });
 
 // 2. テーマを定義
@@ -211,8 +211,8 @@ import {
 } from '@mochi-inc-japan/react-native-stylex-sheet';
 
 export const media = defineConsts({
-  md: '(width >= 750px)',
-  lg: '(width >= 1080px)',
+  md: '@(width >= 750px)',
+  lg: '@(width >= 1080px)',
 });
 
 export const fontSize = defineConsts({
@@ -234,8 +234,8 @@ export const { themes } = createThemes(['light', 'dark']);
 
 ```ts
 const media = defineConsts({
-  md: '(width >= 750px)',
-  lg: '(width >= 1080px)',
+  md: '@(width >= 750px)',
+  lg: '@(width >= 1080px)',
 });
 ```
 
@@ -541,8 +541,8 @@ const stylex = useStylex();
 const style = stylex.mix(styles.button, { color: 'danger' });
 
 const media = defineConsts({
-  md: '(width >= 750px)',
-  lg: '(width >= 1080px)',
+  md: '@(width >= 750px)',
+  lg: '@(width >= 1080px)',
 });
 
 const style = stylex.mix(
@@ -604,16 +604,16 @@ const stylex = useStylex();
 
 | 形式 | 例 |
 |---|---|
-| 下限 | `(width >= 750px)` / `(width > 750px)` |
-| 上限 | `(width <= 1080px)` / `(width < 1080px)` |
-| 範囲 | `(750px <= width < 1080px)` |
+| 下限 | `@(width >= 750px)` / `@(width > 750px)` |
+| 上限 | `@(width <= 1080px)` / `@(width < 1080px)` |
+| 範囲 | `@(750px <= width < 1080px)` |
 
 **キーの順序が重要です。** 後から一致したキーが前のキーを上書きするため、より具体的なクエリは後に記述してください。
 
 ```ts
 const media = defineConsts({
-  md: '(width >= 750px)',
-  lg: '(width >= 1080px)', // より具体的 — 後に記述
+  md: '@(width >= 750px)',
+  lg: '@(width >= 1080px)', // より具体的 — 後に記述
 });
 
 const styles = create({

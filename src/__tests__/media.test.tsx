@@ -11,8 +11,8 @@ import { mockDimensions, finalStyle } from './utils/test-utils';
 describe('Media', () => {
   it('single media queries default', () => {
     const media = stylex.defineConsts({
-      md: '(width >= 750px)',
-      lg: '(width >= 1080px)',
+      md: '@(width >= 750px)',
+      lg: '@(width >= 1080px)',
     });
 
     const styles = stylex.create({
@@ -44,8 +44,8 @@ describe('Media', () => {
 
   it('usage from hooks implicitly', () => {
     const media = stylex.defineConsts({
-      md: '(width >= 750px)',
-      lg: '(width >= 1080px)',
+      md: '@(width >= 750px)',
+      lg: '@(width >= 1080px)',
     });
 
     const styles = stylex.create({
@@ -77,8 +77,8 @@ describe('Media', () => {
 
   it('single media queries md', () => {
     const media = stylex.defineConsts({
-      md: '(width >= 750px)',
-      lg: '(width >= 1080px)',
+      md: '@(width >= 750px)',
+      lg: '@(width >= 1080px)',
     });
 
     const styles = stylex.create({
@@ -110,8 +110,8 @@ describe('Media', () => {
 
   it('single media queries lg', () => {
     const media = stylex.defineConsts({
-      md: '(width >= 750px)',
-      lg: '(width >= 1080px)',
+      md: '@(width >= 750px)',
+      lg: '@(width >= 1080px)',
     });
 
     const styles = stylex.create({
@@ -143,8 +143,8 @@ describe('Media', () => {
 
   it('multi-range media query matches width inside range', () => {
     const media = stylex.defineConsts({
-      md: '(750px <= width < 1080px)',
-      lg: '(width >= 1080px)',
+      md: '@(750px <= width < 1080px)',
+      lg: '@(width >= 1080px)',
     });
 
     const styles = stylex.create({
@@ -176,8 +176,8 @@ describe('Media', () => {
 
   it('multi-range media query does not match width outside range', () => {
     const media = stylex.defineConsts({
-      md: '(750px <= width < 1080px)',
-      lg: '(width >= 1080px)',
+      md: '@(750px <= width < 1080px)',
+      lg: '@(width >= 1080px)',
     });
 
     const styles = stylex.create({
@@ -209,8 +209,8 @@ describe('Media', () => {
 
   it('multiple properties each with independent breakpoints', () => {
     const media = stylex.defineConsts({
-      md: '(width >= 750px)',
-      lg: '(width >= 1080px)',
+      md: '@(width >= 750px)',
+      lg: '@(width >= 1080px)',
     });
 
     const styles = stylex.create({
@@ -248,7 +248,7 @@ describe('Media', () => {
 
   it('multiple style entries with media queries are merged in order', () => {
     const media = stylex.defineConsts({
-      md: '(width >= 750px)',
+      md: '@(width >= 750px)',
     });
 
     const styles = stylex.create({

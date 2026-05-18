@@ -19,8 +19,8 @@ it('preset media effectively key access', async () => {
   const mocked = jest.mocked(mediaUtils.media);
 
   const mediaVal = stylex.defineConsts({
-    md: '(width >= 750px)',
-    lg: '(width >= 1080px)',
+    md: '@(width >= 750px)',
+    lg: '@(width >= 1080px)',
   });
 
   const styles = stylex.create({

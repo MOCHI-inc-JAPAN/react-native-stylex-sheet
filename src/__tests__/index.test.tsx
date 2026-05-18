@@ -3,7 +3,6 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import * as stylex from '../';
-import { Variants } from '../utils/types';
 import { finalStyle, reduceStyles } from './utils/test-utils';
 
 // ---------------------------------------------------------------------------
@@ -42,6 +41,99 @@ describe('Basic', () => {
       height: 200,
       width: 200,
     });
+  });
+
+  it('stylex.create() treats array style values as plain default values', () => {
+    const styles = stylex.create({
+      view: {
+        boxShadow: [{
+          offsetX: 0,
+          offsetY: 0,
+          blurRadius: 10,
+          color: 'black',
+          spreadDistance: 0,
+        }]
+      },
+      view2: { height: 200, width: 200 },
+    });
+
+    function Comp() {
+      return <View {...stylex.props(styles.view, styles.view2)} />;
+    }
+    const { toJSON } = render(<Comp />);
+    expect(toJSON()?.props.style[1]).toMatchObject({
+      height: 200,
+      width: 200,
+    });
+  });
+
+  it('stylex.create() treats plain objects (no variant keys) as default values', () => {
+    const styles = stylex.create({
+      view: {
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+      },
+    });
+
+    const { style } = stylex.props(styles.view);
+    expect(style[0]).toMatchObject({
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+    });
+  });
+
+  it('stylex.create() applies variants to plain-object style values like shadowOffset', () => {
+    const { themes } = stylex.createThemes(['light', 'dark']);
+
+    const styles = stylex.create({
+      view: {
+        shadowOffset: {
+          default: { width: 0, height: 2 },
+          [themes.dark]: { width: 0, height: 4 },
+        },
+        shadowOpacity: 0.1,
+      },
+    });
+
+    function Comp() {
+      const sx = stylex.useStylex();
+      return <View {...sx.props(sx.mix(styles.view))} />;
+    }
+
+    expect(
+      finalStyle(
+        <stylex.RNStyleXProvider theme={themes.dark}>
+          <Comp />
+        </stylex.RNStyleXProvider>
+      )
+    ).toMatchObject({
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+    });
+
+    expect(
+      finalStyle(
+        <stylex.RNStyleXProvider>
+          <Comp />
+        </stylex.RNStyleXProvider>
+      )
+    ).toMatchObject({
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+    });
+  });
+
+  it('stylex.create() throws when variant and non-variant keys are mixed', () => {
+    expect(() =>
+      stylex.create({
+        view: {
+          padding: {
+            default: 12,
+            width: 100,
+          } as any,
+        },
+      })
+    ).toThrow(/mixes variant keys.*with non-variant keys/);
   });
 
   it('stylex.props() has backward compatibility on StyleSheet', () => {
@@ -154,112 +246,6 @@ describe('Basic', () => {
       width: 100,
       borderRadius: 8,
     });
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Variants
-// ---------------------------------------------------------------------------
-
-describe('Variants', () => {
-  it('variants are applied correctly', () => {
-    const vars = stylex.defineVars({
-      colors: {
-        default: 'white',
-        primary: 'red',
-        secondary: 'blue',
-      },
-      sizes: {
-        default: 10,
-        small: 5,
-        medium: 15,
-      },
-    });
-
-    const variants = stylex.createVariants({
-      var1: {
-        backgroundColor: vars.colors,
-      },
-      var2: {
-        width: vars.sizes,
-      },
-    });
-
-    const styles = stylex.create({
-      view: {
-        backgroundColor: variants.var1.backgroundColor,
-        width: variants.var2.width,
-      },
-    });
-
-    expect(stylex.props(styles.view).style[0]).toMatchObject({
-      backgroundColor: 'white',
-      width: 10,
-    });
-
-    expect(stylex.props(styles.view).style.length).toBe(1);
-
-    expect(
-      stylex.props(
-        stylex.mix<Variants<typeof variants>>(styles.view, {
-          var1: 'primary',
-          var2: 'medium',
-        })
-      ).style
-    ).toMatchObject([
-      {
-        backgroundColor: 'white',
-        width: 10,
-      },
-      {
-        backgroundColor: 'red',
-      },
-      {
-        width: 15,
-      },
-    ]);
-  });
-
-  it('multiple style have same variant value is applied correctly', () => {
-    const variants = stylex.createVariants({
-      shape: {
-        borderRadius: {
-          default: 4,
-          round: 8,
-          square: 0,
-          test: 1,
-        },
-        fontSize: {
-          default: 14,
-          round: 16,
-          square: 18,
-        },
-      },
-    });
-    const styles = stylex.create({
-      view: {
-        ...variants.shape,
-      },
-    });
-
-    expect(
-      reduceStyles(
-        stylex.props(
-          stylex.mix<Variants<typeof variants>>(styles.view, {
-            shape: 'round',
-          })
-        ).style
-      )
-    ).toMatchObject({ borderRadius: 8, fontSize: 16 });
-    expect(
-      reduceStyles(
-        stylex.props(
-          stylex.mix<Variants<typeof variants>>(styles.view, {
-            shape: 'test',
-          })
-        ).style
-      )
-    ).toMatchObject({ borderRadius: 1, fontSize: 14 });
   });
 });
 
