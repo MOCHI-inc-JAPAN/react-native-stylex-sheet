@@ -1,6 +1,6 @@
 import { render } from '@testing-library/react-native';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import * as stylex from '../';
 import { Variants } from '../utils/types';
@@ -57,6 +57,49 @@ describe('Basic', () => {
       orgStyles.view,
       orgStyles.view2,
     ]);
+
+    expect(stylex.props(styles.view, { ...styles.view2 }).style).toMatchObject([
+      orgStyles.view,
+      orgStyles.view2,
+    ]);
+  });
+
+  it('useStylex().props() has backward compatibility on StyleSheet', () => {
+    const sameArgs = {
+      view: { backgroundColor: 'red', height: 100, width: 100 },
+      view2: { height: 200, width: 200 },
+    };
+    const styles = stylex.create(sameArgs);
+
+    const orgStyles = StyleSheet.create(sameArgs);
+
+    function Comp1() {
+      const sx = stylex.useStylex();
+      return <View {...sx.props(styles.view, styles.view2)} />;
+    }
+
+    // cached style object
+    expect(
+      finalStyle(
+        <stylex.RNStyleXProvider>
+          <Comp1 />
+        </stylex.RNStyleXProvider>
+      )
+    ).toMatchObject(reduceStyles([orgStyles.view, orgStyles.view2]));
+
+    // dynamic style object
+    function Comp2() {
+      const sx = stylex.useStylex();
+      return <View {...sx.props(styles.view, { ...sameArgs.view2 })} />;
+    }
+
+    expect(
+      finalStyle(
+        <stylex.RNStyleXProvider>
+          <Comp2 />
+        </stylex.RNStyleXProvider>
+      )
+    ).toMatchObject(reduceStyles([orgStyles.view, orgStyles.view2]));
   });
 
   it('stylex.flatten() has backward compatibility on StyleSheet', () => {

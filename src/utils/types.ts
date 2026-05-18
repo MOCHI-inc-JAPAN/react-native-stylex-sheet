@@ -6,10 +6,10 @@ export type RNStyle = StyleObject[string];
 export type VariantStyle<S> = { [key: string]: S };
 export type VariantStyleSheet<Key extends string, S extends RNStyle> = {
   [key in Key]: S;
-} & { default: S; };
+} & { default: S} & { [key in symbol]?: true };
 
 export type XRNStyle<S extends RNStyle = RNStyle> = {
-  [key in keyof S]: VariantStyle<S[key]> | S[key];
+  [key in keyof S]: VariantStyle<S[key]> | S[key]
 };
 
 type ExtractVariantKeys<
@@ -17,7 +17,7 @@ type ExtractVariantKeys<
   S extends RNStyle = RNStyle
 > = Extract<keyof Extract<X[keyof X], VariantStyle<any>>, string>;
 
-export type NamedStyles<T = string, R extends RNStyle = RNStyle> = {
+export type NamedStyles<T extends {}, R extends RNStyle = RNStyle> = {
   [P in keyof T]: XRNStyle<R>;
 };
 
@@ -45,6 +45,8 @@ export type Variants<
     | boolean
     | ExtractPostFix<Extract<KeysOfUnion<A[key][keyof A[key]]>, string>>;
 };
+
+export type VariantKey<T extends string = string, U extends string = string> = `@${T}_${U}`;
 
 export type VariantValue<S extends RNStyle = RNStyle> = {
   [key in keyof S]: VariantStyle<S[key]>;

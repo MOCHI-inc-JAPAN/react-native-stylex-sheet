@@ -8,9 +8,15 @@ import {
 } from './types';
 import { media } from './media';
 import { variants } from './variant';
-import { resolveTheme } from './theme';
+import { resolveTheme } from './theme-helper';
 
-function bundleStyleSheet<S extends RNStyle>(styleObject: XRNStyle<S>) {
+const __isXRNStyle = Symbol('__isXRNStyle');
+
+export const isXRNStyle = (style: any): style is XRNStyle<RNStyle> => {
+  return style && style[__isXRNStyle];
+}
+
+function bundleStyleSheet<S extends RNStyle>(styleObject: XRNStyle<S>): S & { [key in symbol]: true} {
   const result = Object.entries(styleObject).reduce((current, [key, value]) => {
     if (typeof value === 'object') {
       Object.entries(value).forEach(([variantKey, variantValue]) => {
@@ -25,10 +31,12 @@ function bundleStyleSheet<S extends RNStyle>(styleObject: XRNStyle<S>) {
     }
     return current;
   }, {} as Record<string, RNStyle>);
-  return StyleSheet.create(result);
+  const bundled = StyleSheet.create(result);
+  (bundled as any)[__isXRNStyle] = true;
+  return bundled as S & { [key in symbol]: true };
 }
 
-export const create = <const T extends NamedStyles<any, R>, R extends RNStyle>(
+export const create = <R extends RNStyle, const T extends NamedStyles<any, R> = NamedStyles<any, R>>(
   args: T
 ): XRNStyleSheets<T, R> => {
   return Object.entries(args).reduce((current, [key, value]) => {
@@ -55,11 +63,11 @@ export const mix = <
     const themeSheet = resolveTheme(_target, config.theme);
     themeSheet && results.push(themeSheet);
   }
-  if (variantArgs) {
-    results = [...results, ...variants(_target, variantArgs)];
-  }
   if (config.media) {
     results = [...results, ...media(_target, config.media)];
+  }
+  if (variantArgs) {
+    results = [...results, ...variants(_target, variantArgs)];
   }
   return results;
 };

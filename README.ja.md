@@ -369,14 +369,14 @@ function App () {
 }
 ```
 
-themeによってスタイルを追加したいケースや異なるvariableを設定したいケースなどでは、`stylex.create`および、`style.props`を使って選択中のthemeに対応するstyleによって、デフォルトのスタイルをオーバーライト出来ます。
+themeによってスタイルを追加したいケースや異なるvariableを設定したいケースなどでは、`stylex.create`または`createThemes().defineThemes`、および、`style.props`を使って選択中のthemeに対応するstyleによって、デフォルトのスタイルをオーバーライト出来ます。
 
 ```tsx
 import { View, Text } from 'react-native'
 import * as stylex from '@mochi-inc-japan/react-native-stylex-sheet'
 import { useStylex } from '@mochi-inc-japan/react-native-stylex-sheet'
 
-const { themes } = stylex.createThemes(['light', 'dark', 'other']);
+const { themes, defineThemes } = stylex.createThemes(['light', 'dark', 'other']);
 
 // defaultのスタイル定義
 const defaultColors = stylex.defineVars({
@@ -415,13 +415,12 @@ const viewTheme = stylex.create({
   [themes.other]: { backgroundColor: 'gray'}
 })
 
-
-const textTheme = stylex.create({
+// NOTE: defineThemesは単なるcreateのaliasですが、未定義のtheme指定に対して型チェックが機能します。
+const textTheme = defineThemes({
   // 追加のスタイルはcreateに直接記入する
   [themes.dark]: { borderColor: 'white', borderWidth: 1, ...darkThemeStyleVariants.text}
   [themes.other]: {...otherThemeStyleVariants.text}
 })
-
 
 function App () {
   const stylex = useStylex()

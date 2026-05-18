@@ -4,10 +4,10 @@ export type Media = Record<string, string | boolean>;
 export const media = <T extends VariantStyleSheet<string, RNStyle>>(
   target: T,
   mediaParam: number | string
-): T[keyof T][] => {
-  const result: T[keyof T][] = [];
+): T[Extract<keyof T, string>][] => {
+  const result: T[Extract<keyof T, string>][] = [];
   if (typeof mediaParam === 'string') {
-    target[mediaParam] && result.push(target[mediaParam] as T[keyof T]);
+    target[mediaParam] && result.push(target[mediaParam] as T[Extract<keyof T, string>]);
   } else if (typeof mediaParam === 'number') {
     const keys = Object.keys(target);
     for (let i = keys.length - 1; i >= 0; i--) {
@@ -15,7 +15,7 @@ export const media = <T extends VariantStyleSheet<string, RNStyle>>(
       // NOTE: Assuming only one media query will match, we can break after the first match.
       // Because later media query will be more specific and override the previous one.
       if (matchMediaRangeQuery(key, mediaParam)) {
-        result.push(target[key] as T[keyof T]);
+        result.push(target[key] as T[Extract<keyof T, string>]);
         break;
       }
     }

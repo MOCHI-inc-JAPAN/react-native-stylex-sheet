@@ -1,5 +1,6 @@
 import type {
   RNStyle,
+  VariantKey,
   VariantStyle,
   VariantStyleSheet,
   VariantValue,
@@ -15,7 +16,7 @@ type CreateVariantValueOutput<
     : `@${K}_${key & string}`]: A[key];
 };
 
-export const createVariantKey = (variantKey: string, key: string) =>
+export const createVariantKey = <A extends string, B extends string>(variantKey: A, key: B): VariantKey<A, B> =>
   `@${variantKey}_${key}`;
 
 export const createVariantValue = <
@@ -101,12 +102,12 @@ export const variants = <
 >(
   target: T,
   variants: V
-): T[keyof T][] => {
-  const results = [] as T[keyof T][];
+): T[Extract<keyof T, string>][] => {
+  const results = [] as T[Extract<keyof T, string>][];
   for (const [variantKey, variantValue] of Object.entries(variants)) {
     if (variantValue === 'default') continue;
     const nextStyle = target[`@${variantKey}_${variantValue}`];
-    nextStyle && results.push(nextStyle as T[keyof T]);
+    nextStyle && results.push(nextStyle as T[Extract<keyof T, string>]);
   }
   return results;
 };
