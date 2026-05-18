@@ -20,17 +20,36 @@ type BundleStyleSheet<S extends XRNStyle<any>>  = StyleSheet.NamedStyles<
   Record<keyof S, RNStyle>
 >
 
+function isVariantKey(key: string): boolean {
+  return key === 'default' || key.startsWith('@');
+}
+
 function bundleStyleSheet<S extends RNStyle>(
   styleObject: XRNStyle<S>
 ): BundleStyleSheet<typeof styleObject> & { [key in symbol]: true} {
   const result = Object.entries(styleObject).reduce((current, [key, value]) => {
-    if (typeof value === 'object') {
-      Object.entries(value).forEach(([variantKey, variantValue]) => {
-        if (!current[variantKey]) {
-          current[variantKey] = {};
-        }
-        (current[variantKey] as any)[key] = variantValue;
-      });
+    if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+      const keys = Object.keys(value as object);
+      const variantKeyCount = keys.filter(isVariantKey).length;
+
+      if (variantKeyCount === keys.length) {
+        Object.entries(value as object).forEach(([variantKey, variantValue]) => {
+          if (!current[variantKey]) {
+            current[variantKey] = {};
+          }
+          (current[variantKey] as any)[key] = variantValue;
+        });
+      } else if (variantKeyCount === 0) {
+        current.default ||= {};
+        (current.default as any)[key] = value;
+      } else {
+        const invalidKeys = keys.filter((k) => !isVariantKey(k));
+        const validKeys = keys.filter(isVariantKey);
+        throw new Error(
+          `Style property "${key}" mixes variant keys (${validKeys.join(', ')}) with non-variant keys (${invalidKeys.join(', ')}). ` +
+          `All object keys must either all be variant/media/theme keys ("default" or starting with "@"), or all be plain style values.`
+        );
+      }
     } else {
       current.default ||= {};
       (current.default as any)[key] = value;

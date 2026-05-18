@@ -43,7 +43,7 @@ describe('Basic', () => {
     });
   });
 
-  it('stylex.create() can tell style value object and variant object', () => {
+  it('stylex.create() treats array style values as plain default values', () => {
     const styles = stylex.create({
       view: {
         boxShadow: [{
@@ -65,6 +65,75 @@ describe('Basic', () => {
       height: 200,
       width: 200,
     });
+  });
+
+  it('stylex.create() treats plain objects (no variant keys) as default values', () => {
+    const styles = stylex.create({
+      view: {
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+      },
+    });
+
+    const { style } = stylex.props(styles.view);
+    expect(style[0]).toMatchObject({
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+    });
+  });
+
+  it('stylex.create() applies variants to plain-object style values like shadowOffset', () => {
+    const { themes } = stylex.createThemes(['light', 'dark']);
+
+    const styles = stylex.create({
+      view: {
+        shadowOffset: {
+          default: { width: 0, height: 2 },
+          [themes.dark]: { width: 0, height: 4 },
+        },
+        shadowOpacity: 0.1,
+      },
+    });
+
+    function Comp() {
+      const sx = stylex.useStylex();
+      return <View {...sx.props(sx.mix(styles.view))} />;
+    }
+
+    expect(
+      finalStyle(
+        <stylex.RNStyleXProvider theme={themes.dark}>
+          <Comp />
+        </stylex.RNStyleXProvider>
+      )
+    ).toMatchObject({
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+    });
+
+    expect(
+      finalStyle(
+        <stylex.RNStyleXProvider>
+          <Comp />
+        </stylex.RNStyleXProvider>
+      )
+    ).toMatchObject({
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+    });
+  });
+
+  it('stylex.create() throws when variant and non-variant keys are mixed', () => {
+    expect(() =>
+      stylex.create({
+        view: {
+          padding: {
+            default: 12,
+            width: 100,
+          } as any,
+        },
+      })
+    ).toThrow(/mixes variant keys.*with non-variant keys/);
   });
 
   it('stylex.props() has backward compatibility on StyleSheet', () => {
