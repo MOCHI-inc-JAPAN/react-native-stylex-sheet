@@ -14,6 +14,31 @@ The reason why REACT_NATIVE_STYLE is not fastest is that it uses dynamic object 
 If it has cache with `StyleSheet.create`, of course, fastest or same level of the other two libraries faster than it.
 Top two libraries are used in the theoretically fastest way, so the results may vary depending on the execution environment or randomly.
 
+The bundle sizes by esbuild:
+
+  ┌────────────────────────────────────────────┬───────────┬─────────────┐
+  │                  Library                   │ Minified  │ Min+Gzipped │
+  ├────────────────────────────────────────────┼───────────┼─────────────┤
+  │ @mochi-inc-japan/react-native-stylex-sheet │ 4.42 KB   │ 1.89 KB     │
+  ├────────────────────────────────────────────┼───────────┼─────────────┤
+  │ @shopify/restyle                           │ 15.37 KB  │ 4.41 KB     │
+  ├────────────────────────────────────────────┼───────────┼─────────────┤
+  │ @emotion/react                             │ 22.14 KB  │ 8.69 KB     │
+  ├────────────────────────────────────────────┼───────────┼─────────────┤
+  │ react-native-unistyles                     │ 26.44 KB  │ 8.76 KB     │
+  ├────────────────────────────────────────────┼───────────┼─────────────┤
+  │ nativewind                                 │ 27.88 KB  │ 8.95 KB     │
+  ├────────────────────────────────────────────┼───────────┼─────────────┤
+  │ styled-components                          │ 28.33 KB  │ 10.92 KB    │
+  ├────────────────────────────────────────────┼───────────┼─────────────┤
+  │ @emotion/native                            │ 35.49 KB  │ 13.63 KB    │
+  ├────────────────────────────────────────────┼───────────┼─────────────┤
+  │ twrnc                                      │ 79.58 KB  │ 25.06 KB    │
+  ├────────────────────────────────────────────┼───────────┼─────────────┤
+  │ @gluestack-style/react                     │ 135.18 KB │ 41.61 KB    │
+  └────────────────────────────────────────────┴───────────┴─────────────┘
+
+
 ## Installation
 
 ```sh
